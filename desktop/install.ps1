@@ -69,5 +69,5 @@ $link.Description = 'A waving lucky cat. Click it for a luck boost.'
 $link.Save()
 
 Start-Process $powershell -ArgumentList $arguments -WindowStyle Hidden
-Write-Host 'Hoki is waving on your desktop (bottom-right). Click it for luck, drag to move, right-click for options.'
+Write-Host 'Hoki is waving on the right edge of your desktop. Click it for luck, drag to move, right-click for options.'
 Write-Host 'Start it again any time from the Start menu: "Hoki Lucky Cat".'
