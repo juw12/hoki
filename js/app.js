@@ -6,9 +6,7 @@
 
   const STORE_KEY = 'hoki.v1';
 
-  // Paw motion. Angles in degrees around the pivot set in assets/cat.svg.
-  const PAW_MIN_DEG = -10;
-  const PAW_MAX_DEG = 6;
+  // Paw motion: assets/cat.svg holds sprite frames #hoki-paw-0 (up) .. #hoki-paw-N (folded).
   const BASE_WAVES_PER_SEC = 0.7;
   const MAX_EXTRA_WAVES_PER_SEC = 2.6;
 
@@ -106,8 +104,9 @@
   }
 
   // ---------- rendering ----------
-  let paw = null;
-  let pivot = [0, 0];
+  let pawFrames = [];
+  let shownFrame = -1;
+  let catSvg = null;
   let boost = 0;
   let phase = 0;
   let lastFrame = performance.now();
@@ -127,17 +126,28 @@
 
   function renderBoost() {
     const pct = Math.round(boost * 100);
-    boostBar.firstElementChild.style.width = `${pct}%`;
+    // Fill in whole blocks (5% each) for a chunky retro meter.
+    boostBar.firstElementChild.style.width = `${Math.round(pct / 5) * 5}%`;
     boostBar.setAttribute('aria-valuenow', String(pct));
     boostPct.textContent = `${pct}%`;
-    glow.style.opacity = String(0.25 + boost * 0.75);
-    glow.style.transform = `scale(${0.9 + boost * 0.25})`;
+    glow.style.opacity = String(0.3 + Math.round(boost * 7) / 10);
+    glow.style.transform = `scale(${1 + Math.round(boost * 4) * 0.05})`;
   }
 
-  function setPawAngle(deg) {
-    if (paw) {
-      paw.setAttribute('transform', `rotate(${deg.toFixed(2)} ${pivot[0]} ${pivot[1]})`);
+  // Map a smooth wave (-1..1) onto sprite frames: up, middle..., folded.
+  function frameForWave(wave) {
+    const last = pawFrames.length - 1;
+    return Math.min(last, Math.max(0, Math.round(((1 - wave) / 2) * last)));
+  }
+
+  function showPawFrame(index) {
+    if (index === shownFrame) {
+      return;
     }
+    pawFrames.forEach((group, i) => {
+      group.setAttribute('display', i === index ? 'inline' : 'none');
+    });
+    shownFrame = index;
   }
 
   function frame(now) {
@@ -149,18 +159,22 @@
     }
     const speed = reducedMotion ? 0.35 : BASE_WAVES_PER_SEC + boost * MAX_EXTRA_WAVES_PER_SEC;
     phase += dt * speed * Math.PI * 2;
-    const mid = (PAW_MIN_DEG + PAW_MAX_DEG) / 2;
-    const amp = (PAW_MAX_DEG - PAW_MIN_DEG) / 2;
-    setPawAngle(mid + amp * Math.sin(phase));
+    if (pawFrames.length) {
+      showPawFrame(frameForWave(Math.sin(phase)));
+    }
     renderBoost();
     requestAnimationFrame(frame);
   }
 
   // ---------- effects ----------
   function pawPoint() {
-    const target = paw ? paw.querySelector('circle') : catButton;
-    const r = target.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const r = (catSvg || catButton).getBoundingClientRect();
+    if (!catSvg) {
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }
+    const [vbW, vbH] = catSvg.getAttribute('viewBox').split(' ').slice(2).map(Number);
+    const [pawX, pawY] = (catSvg.dataset.paw || '0 0').split(' ').map(Number);
+    return { x: r.left + (pawX / vbW) * r.width, y: r.top + (pawY / vbH) * r.height };
   }
 
   function floatText(text, x, y, big = false) {
@@ -179,8 +193,8 @@
       el.className = 'coin';
       const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.2;
       const dist = 60 + Math.random() * 90;
-      el.style.left = `${x - 7}px`;
-      el.style.top = `${y - 7}px`;
+      el.style.left = `${x - 6}px`;
+      el.style.top = `${y - 6}px`;
       el.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
       el.style.setProperty('--dy', `${Math.sin(angle) * dist + 40}px`);
       fxLayer.append(el);
@@ -303,13 +317,12 @@
     renderStats();
     const response = await fetch('assets/cat.svg');
     catButton.innerHTML = await response.text();
-    const svg = catButton.querySelector('svg');
-    svg.removeAttribute('width');
-    svg.removeAttribute('height');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.setAttribute('focusable', 'false');
-    paw = svg.querySelector('#hoki-paw');
-    pivot = paw.dataset.pivot.split(' ').map(Number);
+    catSvg = catButton.querySelector('svg');
+    catSvg.removeAttribute('width');
+    catSvg.removeAttribute('height');
+    catSvg.setAttribute('aria-hidden', 'true');
+    catSvg.setAttribute('focusable', 'false');
+    pawFrames = [...catSvg.querySelectorAll('[id^="hoki-paw-"]')];
     requestAnimationFrame((now) => {
       lastFrame = now;
       frame(now);
@@ -323,5 +336,5 @@
   }
 
   // Small hook for automated checks.
-  window.hoki = { tap, state, getBoost: () => boost };
+  window.hoki = { tap, state, getBoost: () => boost, getFrame: () => shownFrame };
 })();

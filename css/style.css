@@ -1,11 +1,21 @@
+@font-face {
+  font-family: "Pixelify Sans";
+  src: url("../assets/fonts/pixelify-sans.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
 :root {
   --red: #8f0f1c;
   --red-deep: #5e0812;
-  --red-bright: #c8102e;
-  --gold: #f5c542;
-  --gold-dim: #c99a1e;
+  --red-ring: #a8162a;
+  --red-bright: #c41e33;
+  --gold: #f8c846;
+  --gold-dim: #c4861d;
+  --gold-light: #ffe9a3;
   --cream: #fff4dc;
-  --ink: #3a2a20;
+  --ink: #2b0a0f;
+  --pixel: "Pixelify Sans", ui-monospace, "Cascadia Mono", Consolas, "Microsoft YaHei", "PingFang SC", monospace;
   color-scheme: dark;
 }
 
@@ -23,13 +33,26 @@ body {
   min-height: 100dvh;
   display: grid;
   grid-template-rows: auto 1fr auto auto;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: var(--pixel);
   color: var(--cream);
-  background:
-    radial-gradient(120% 70% at 50% 38%, #b3121f 0%, var(--red) 45%, var(--red-deep) 100%);
+  background-color: var(--red-deep);
+  background-image:
+    repeating-conic-gradient(rgba(0, 0, 0, 0.1) 0 25%, transparent 0 50%),
+    radial-gradient(circle at 50% 40%, var(--red) 0 55%, var(--red-deep) 100%);
+  background-size: 4px 4px, 100% 100%;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* faint CRT scanlines */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 3px);
+  z-index: 50;
 }
 
 button {
@@ -41,44 +64,58 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px 0;
+  padding: 16px 18px 0;
 }
 
 .top h1 {
   margin: 0;
-  font-size: 1.15rem;
-  letter-spacing: 0.02em;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   color: var(--gold);
+  text-shadow: 3px 3px 0 var(--ink);
 }
 
 .top h1 span {
-  margin-left: 6px;
-  font-weight: 500;
+  margin-left: 8px;
+  font-size: 1.05rem;
+  font-weight: 400;
   color: var(--cream);
-  opacity: 0.8;
+  letter-spacing: 0.1em;
 }
 
 .chip {
-  border: 1px solid rgba(245, 197, 66, 0.55);
-  background: rgba(0, 0, 0, 0.18);
-  border-radius: 999px;
-  padding: 7px 14px;
-  font-size: 0.85rem;
+  border: 3px solid var(--gold);
+  border-radius: 0;
+  background: var(--red);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 4px 4px 0 var(--ink);
   cursor: pointer;
 }
 
 .chip:hover {
-  background: rgba(245, 197, 66, 0.14);
+  background: var(--red-ring);
+}
+
+.chip:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink);
 }
 
 .chip:focus-visible,
 .cat:focus-visible {
-  outline: 3px solid var(--gold);
-  outline-offset: 4px;
+  outline: 3px dashed var(--gold);
+  outline-offset: 5px;
 }
 
 .chip[aria-pressed="false"] {
-  opacity: 0.65;
+  border-color: var(--gold-dim);
+  color: var(--gold-light);
+  opacity: 0.75;
 }
 
 /* Cat stage */
@@ -90,14 +127,21 @@ button {
   padding: 8px 0;
 }
 
+/* stepped "sunset rings" behind the cat; brighter with the boost */
 .glow {
   position: absolute;
-  width: min(78vw, 420px);
+  width: min(84vw, 440px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 197, 66, 0.55) 0%, rgba(245, 197, 66, 0) 65%);
-  opacity: 0.25;
-  transform: scale(0.9);
+  background: radial-gradient(
+    circle,
+    rgba(248, 200, 70, 0.55) 0 22%,
+    rgba(248, 200, 70, 0.32) 22% 34%,
+    rgba(248, 200, 70, 0.16) 34% 48%,
+    rgba(248, 200, 70, 0.07) 48% 62%,
+    transparent 62%
+  );
+  opacity: 0.3;
   pointer-events: none;
 }
 
@@ -111,21 +155,20 @@ button {
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform 90ms ease-out;
 }
 
 .cat svg {
   display: block;
   width: 100%;
   height: auto;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.28));
+  filter: drop-shadow(6px 6px 0 rgba(43, 10, 15, 0.55));
 }
 
 .cat.bump {
-  transform: scale(0.96);
+  transform: translateY(4px);
 }
 
-/* Floating "+1" and coins */
+/* Floating "+1" and coins (stepped animations for a sprite feel) */
 .fx {
   position: fixed;
   inset: 0;
@@ -135,52 +178,54 @@ button {
 
 .float {
   position: absolute;
-  font-weight: 800;
-  font-size: 1.5rem;
+  font-weight: 700;
+  font-size: 1.6rem;
   color: var(--gold);
-  text-shadow: 0 2px 0 var(--red-deep), 0 0 12px rgba(245, 197, 66, 0.6);
+  text-shadow: 3px 3px 0 var(--ink);
   transform: translate(-50%, -50%);
-  animation: rise 1100ms ease-out forwards;
+  animation: rise 1100ms steps(11) forwards;
   white-space: nowrap;
 }
 
 .float.big {
-  font-size: 2.4rem;
+  font-size: 2.6rem;
 }
 
 @keyframes rise {
   0% {
-    opacity: 0;
-    transform: translate(-50%, -30%) scale(0.7);
-  }
-  15% {
     opacity: 1;
-    transform: translate(-50%, -60%) scale(1.1);
+    transform: translate(-50%, -40%);
+  }
+  70% {
+    opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -260%) scale(1);
+    transform: translate(-50%, -280%);
   }
 }
 
 .coin {
   position: absolute;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ffe9a3, var(--gold) 55%, var(--gold-dim));
-  border: 1.5px solid #9a6b00;
-  animation: fling 900ms cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
+  width: 12px;
+  height: 12px;
+  background: var(--gold);
+  border: 2px solid var(--ink);
+  box-shadow: inset -3px -3px 0 var(--gold-dim), inset 2px 2px 0 var(--gold-light);
+  animation: fling 900ms steps(9) forwards;
 }
 
 @keyframes fling {
   0% {
     opacity: 1;
-    transform: translate(0, 0) scale(0.6);
+    transform: translate(0, 0);
+  }
+  80% {
+    opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translate(var(--dx), var(--dy)) scale(1);
+    transform: translate(var(--dx), var(--dy));
   }
 }
 
@@ -188,7 +233,7 @@ button {
 .stats {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 0 18px 6px;
   text-align: center;
 }
@@ -200,45 +245,49 @@ button {
 }
 
 .today span {
-  font-size: clamp(2.6rem, 9vw, 3.6rem);
-  font-weight: 800;
+  font-size: clamp(3rem, 11vw, 4.2rem);
+  font-weight: 700;
   color: var(--gold);
+  text-shadow: 4px 4px 0 var(--ink);
   font-variant-numeric: tabular-nums;
 }
 
 .today small,
 .boost small {
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 0.8rem;
-  opacity: 0.8;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
 }
 
 .boost {
   display: grid;
   justify-items: center;
-  width: min(260px, 70vw);
+  width: min(260px, 72vw);
 }
 
 .bar {
   width: 100%;
-  height: 8px;
-  border-radius: 99px;
-  background: rgba(0, 0, 0, 0.3);
-  overflow: hidden;
+  height: 20px;
+  padding: 3px;
+  border: 3px solid var(--gold);
+  background: var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
 }
 
 .bar span {
   display: block;
   height: 100%;
   width: 0%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--gold-dim), var(--gold), #fff1b8);
+  background: repeating-linear-gradient(90deg, var(--gold) 0 10px, transparent 10px 13px);
 }
 
 .total {
   margin: 0;
   font-size: 0.85rem;
-  opacity: 0.85;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
 }
 
 .total b {
@@ -249,13 +298,13 @@ button {
 .foot {
   display: grid;
   justify-items: center;
-  gap: 10px;
-  padding: 8px 18px 18px;
+  gap: 12px;
+  padding: 8px 18px 20px;
 }
 
 .actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -263,10 +312,10 @@ button {
 .panel {
   width: 100%;
   max-width: 460px;
-  font-size: 0.85rem;
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px solid rgba(245, 197, 66, 0.3);
-  border-radius: 14px;
+  font-size: 0.9rem;
+  background: var(--red-deep);
+  border: 3px solid var(--gold);
+  box-shadow: 5px 5px 0 var(--ink);
   padding: 10px 14px;
 }
 
@@ -284,9 +333,9 @@ button {
 .cmd code {
   flex: 1;
   min-width: 0;
-  font-size: 0.75rem;
-  background: rgba(0, 0, 0, 0.35);
-  border-radius: 8px;
+  font-size: 0.72rem;
+  background: var(--ink);
+  border: 2px solid var(--gold-dim);
   padding: 8px;
   overflow-x: auto;
   white-space: nowrap;
@@ -295,24 +344,26 @@ button {
 .fine {
   margin: 0;
   font-size: 0.72rem;
-  opacity: 0.6;
+  letter-spacing: 0.04em;
+  opacity: 0.65;
 }
 
 .toast {
   position: fixed;
   left: 50%;
-  top: 18%;
-  transform: translate(-50%, -10px);
+  top: 16%;
+  transform: translate(-50%, -8px);
   background: var(--gold);
-  color: var(--red-deep);
+  color: var(--ink);
   font-weight: 700;
   padding: 10px 18px;
-  border-radius: 14px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  border: 4px solid var(--ink);
+  box-shadow: 6px 6px 0 rgba(43, 10, 15, 0.6);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 250ms, transform 250ms;
+  transition: opacity 150ms steps(3), transform 150ms steps(3);
   text-align: center;
+  z-index: 60;
 }
 
 .toast.show {
@@ -322,7 +373,7 @@ button {
 
 .toast b {
   display: block;
-  font-size: 1.8rem;
+  font-size: 2rem;
 }
 
 /* Widget mode (?widget): just the cat on a transparent background, for embedding */
@@ -331,6 +382,7 @@ body.widget {
   grid-template-rows: 1fr auto;
 }
 
+body.widget::after,
 body.widget .top,
 body.widget .foot,
 body.widget .boost,
@@ -344,7 +396,7 @@ body.widget .cat {
 }
 
 body.widget .today span {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
