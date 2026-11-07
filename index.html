@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hoki - tap the lucky cat for a luck boost</title>
+  <meta name="description" content="A waving Chinese lucky cat (招财猫) for your home screen or desktop. Tap it for a luck boost. Offline, no account.">
+  <meta name="theme-color" content="#8f0f1c">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hoki">
+  <link rel="stylesheet" href="css/style.css?v=1.0.0">
+</head>
+<body>
+  <header class="top">
+    <h1>Hoki <span lang="zh">招财猫</span></h1>
+    <button id="sound" class="chip" type="button" aria-pressed="true">Sound on</button>
+  </header>
+
+  <main class="stage">
+    <div class="glow" id="glow" aria-hidden="true"></div>
+    <button id="cat" class="cat" type="button" aria-label="Tap the lucky cat for a luck boost"></button>
+    <div class="fx" id="fx" aria-hidden="true"></div>
+  </main>
+
+  <section class="stats" aria-label="Your luck">
+    <p class="today"><span id="today">0</span><small>luck today</small></p>
+    <div class="boost">
+      <div class="bar" role="progressbar" aria-label="Luck boost" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="boost-bar"><span></span></div>
+      <small>Luck boost <b id="boost-pct">0%</b></small>
+    </div>
+    <p class="total">All time <b id="total">0</b> · next lucky number <b id="next">8</b></p>
+  </section>
+
+  <footer class="foot">
+    <div class="actions">
+      <button id="install" class="chip" type="button">Add to home screen</button>
+      <button id="desktop-toggle" class="chip" type="button" aria-expanded="false" aria-controls="desktop">Desktop widget</button>
+    </div>
+    <div id="install-help" class="panel" hidden></div>
+    <div id="desktop" class="panel" hidden>
+      <p><b>Windows:</b> paste this into PowerShell. Hoki sits on your desktop, waves all day, and remembers your luck.</p>
+      <div class="cmd"><code id="install-cmd">irm https://juw12.github.io/hoki/desktop/install.ps1 | iex</code><button id="copy" class="chip" type="button">Copy</button></div>
+      <p class="fine">Drag to move. Right-click for size, sound, always on top and start with Windows.</p>
+    </div>
+    <p class="fine">For fun. Luck not guaranteed. Saved only on this device.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript>Hoki needs JavaScript to wave.</noscript>
+  <script src="js/app.js?v=1.0.0" defer></script>
+</body>
+</html>
