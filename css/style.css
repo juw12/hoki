@@ -754,48 +754,45 @@ html {
   body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    /* header, spacer, cat, hint, spacer: cat + hint stay one block, centred with the side column */
-    grid-template-rows: auto 1fr auto auto 1fr;
+    /* header, cat row, hint row: both columns top-aligned so the side column meets the cat's top */
+    grid-template-rows: auto auto auto;
     column-gap: 64px;
     justify-items: center;
-    align-items: center;
+    align-items: start;
     max-width: 1080px;
     margin: 0 auto;
-    padding: 0 40px 32px;
+    padding: 0 40px 40px;
   }
 
   .top {
     grid-column: 1 / -1;
     max-width: none;
-    padding-top: 20px;
+    padding: 24px 2px 22px;
   }
 
   .stage {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 2;
     justify-self: end;
     width: min(42vw, calc((100vh - 140px) / 1.1), 480px);
-  }
-
-  .side {
-    justify-self: start;
-    align-items: flex-start;
-    max-width: 400px;
   }
 
   .side {
     grid-column: 2;
-    grid-row: 3 / 5;
-    align-self: center;
+    grid-row: 2;
+    justify-self: start;
+    align-self: start;
+    align-items: flex-start;
+    max-width: 400px;
   }
 
   .hint {
     grid-column: 1;
-    grid-row: 4;
+    grid-row: 3;
     justify-self: end;
     align-self: start;
     width: min(42vw, calc((100vh - 140px) / 1.1), 480px);
-    margin: 4px 0 0;
+    margin: 8px 0 0;
     text-align: center;
     font-size: 1.2rem;
   }
