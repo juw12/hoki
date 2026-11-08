@@ -2,8 +2,8 @@
   <!-- Hoki the lucky cat. Flat layered shapes only (no gradients, clips or transforms)
        so the Windows widget can draw the same file. The raised arm is #hoki-paw and
        rotates around data-pivot between the angles in data-paw-range (degrees).
-       v2: soft 3-step shading on body/head/arm/tail, clean paw-to-koban grip,
-       smooth shoulder joint. -->
+       v2.1: soft 5-step shading on body/head/arm, clean paw-to-koban grip,
+       smooth shoulder joint. Ladder: #fffaf2→#f5e9d6→#f3e6d4→#f1e4d1→#ead8c2→#e2ccb0 -->
 
   <!-- ======== CUSHION ======== -->
   <g id="hoki-cushion">
@@ -28,9 +28,11 @@
 
     <!-- Main body shape -->
     <path d="M120 116 C166 116 186 160 185 194 C184 220 160 230 120 230 C80 230 56 220 55 194 C54 160 74 116 120 116 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4"/>
-    <!-- Body shadow: right side, 3 steps for soft picture-book feel -->
+    <!-- Body shadow: right side, 5-step soft picture-book shading -->
     <path d="M158 132 C172 148 180 170 179 192 C178 212 164 224 140 228 C162 220 175 206 177 188 C179 168 172 148 158 132 Z" fill="#f5e9d6"/>
+    <path d="M163 136 C177 154 183 176 181.5 195 C180 215 162 226 132 228.5 C156 221 172.5 206 174.5 187 C176.5 168 172 150 163 136 Z" fill="#f3e6d4"/>
     <path d="M168 140 C182 160 186 182 184 198 C182 218 160 228 124 229 C150 222 170 206 172 186 C174 168 172 152 168 140 Z" fill="#f1e4d1"/>
+    <path d="M173 149 C183 166 186 184 184 198 C182 216 165 226 137 228.5 C158 220 173 205 175 187 C177 172 175.5 158.5 173 149 Z" fill="#ead8c2"/>
     <path d="M178 158 C184 172 186 186 184 198 C182 214 170 224 150 228 C166 218 176 204 178 188 C180 176 179 165 178 158 Z" fill="#e2ccb0"/>
     <!-- Body belly highlight -->
     <ellipse cx="108" cy="194" rx="36" ry="27" fill="#ffffff" opacity="0.55"/>
@@ -71,9 +73,11 @@
     <ellipse cx="88" cy="58" rx="9" ry="6" fill="#6a574b" opacity="0.9"/>
     <!-- Forehead highlight -->
     <ellipse cx="116" cy="68" rx="26" ry="12" fill="#ffffff" opacity="0.6"/>
-    <!-- Soft head shadow: under jaw (3 steps) -->
+    <!-- Soft head shadow: under jaw (5 steps) -->
     <path d="M64 118 C74 136 96 144 120 144 C144 144 166 136 176 118 C166 130 146 138 120 138 C94 138 74 130 64 118 Z" fill="#f5e9d6"/>
+    <path d="M67 120 C77 135 97 142 120 142 C143 142 163 135 173 120 C163 131 144 138 120 138 C96 138 77 131 67 120 Z" fill="#f3e6d4"/>
     <path d="M70 122 C80 134 98 140 120 140 C142 140 160 134 170 122 C160 132 142 138 120 138 C98 138 80 132 70 122 Z" fill="#f1e4d1"/>
+    <path d="M75 125 C85 135 101 140 120 140 C139 140 155 135 165 125 C155 133 139 138 120 138 C101 138 85 133 75 125 Z" fill="#ead8c2"/>
     <path d="M80 128 C90 136 104 140 120 140 C136 140 150 136 160 128 C150 134 136 138 120 138 C104 138 90 134 80 128 Z" fill="#e2ccb0"/>
     <!-- Head outline -->
     <ellipse cx="120" cy="90" rx="66" ry="54" fill="none" stroke="#7a5f4c" stroke-width="2.4"/>
@@ -125,9 +129,11 @@
     <!-- Left arm (raised, waving): 3-step shading for rounded feel -->
     <!-- Arm base shape -->
     <path d="M55.6 159 L30.1 94.8 A11 11 0 0 1 49.9 85.2 L84.4 145 A16 16 0 0 1 55.6 159 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4" stroke-linejoin="round"/>
-    <!-- Arm inner shadow (right edge, 3 steps for soft shading) -->
+    <!-- Arm inner shadow (right edge, 5 steps for soft shading) -->
     <path d="M74 138 L58 104 C62 100 66 100 70 103 L82 136 C80 142 76 142 74 138 Z" fill="#f5e9d6"/>
+    <path d="M76 136 L61 104 C64.5 100.5 68 100.5 71.5 103.5 L82.5 134 C81 139.5 77.5 140 76 136 Z" fill="#f3e6d4"/>
     <path d="M78 134 L64 104 C67 101 70 101 73 104 L83 132 C82 137 79 138 78 134 Z" fill="#f1e4d1"/>
+    <path d="M79.5 132 L67 105 C69.5 102.5 72 102.5 74.5 105 L83 130 C82.5 134.5 80.5 135.5 79.5 132 Z" fill="#ead8c2"/>
     <path d="M81 130 L70 106 C72 104 74 104 76 106 L83 128 C83 132 82 133 81 130 Z" fill="#e2ccb0"/>
     <!-- Arm outer highlight (left edge) -->
     <path d="M56 132 L38 98 C40 94 44 92 47 95 L62 128 C60 132 58 134 56 132 Z" fill="#ffffff" opacity="0.4"/>
@@ -142,8 +148,9 @@
 
     <!-- Open palm facing viewer -->
     <ellipse cx="38" cy="72" rx="19.5" ry="18.5" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4"/>
-    <!-- Palm shadow (lower half) -->
+    <!-- Palm shadow (lower half, 3 steps) -->
     <path d="M22 78 C24 84 30 88 38 89 C46 88 52 84 54 78 C50 84 44 87 38 87 C32 87 26 84 22 78 Z" fill="#f5e9d6"/>
+    <path d="M24 80 C26 85 31.5 88.5 38 89 C44.5 88.5 50 85 52 80 C48.5 85.5 43.5 88 38 88 C32.5 88 27.5 85.5 24 80 Z" fill="#f3e6d4"/>
     <path d="M26 82 C28 86 33 88 38 88 C43 88 48 86 50 82 C47 86 43 87 38 87 C33 87 29 86 26 82 Z" fill="#f1e4d1"/>
     <!-- Palm center pad -->
     <ellipse cx="38" cy="78" rx="7.5" ry="6" fill="#f3b4a6"/>
