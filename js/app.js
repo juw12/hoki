@@ -227,30 +227,45 @@
   }
 
   let shareTimer = null;
+  function flashShare(labelText) {
+    fortuneShareLabel.textContent = labelText;
+    fortuneShareBtn.classList.add('is-copied');
+    if (shareTimer) {
+      clearTimeout(shareTimer);
+    }
+    shareTimer = setTimeout(() => {
+      fortuneShareLabel.textContent = 'Share';
+      fortuneShareBtn.classList.remove('is-copied');
+    }, 1600);
+  }
+  function copyToClipboard(text) {
+    const done = (ok) => flashShare(ok ? 'Copied' : 'Copy');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => done(true), () => done(fallbackCopy(text)));
+    } else {
+      done(fallbackCopy(text));
+    }
+  }
   function shareFortune() {
     const text = fortuneShareText();
     if (!text) {
-      return { ok: false, copied: false, text };
+      return;
     }
-    const settle = (copied) => {
-      fortuneShareLabel.textContent = copied ? 'Copied' : 'Copy';
-      fortuneShareBtn.classList.toggle('is-copied', copied);
-      if (shareTimer) {
-        clearTimeout(shareTimer);
+    const payload = { text, title: "Hoki · today's fortune" };
+    if (typeof navigator.share === 'function' && (!navigator.canShare || navigator.canShare(payload))) {
+      try {
+        Promise.resolve(navigator.share(payload))
+          .then(() => flashShare('Shared'))
+          .catch((err) => {
+            if (!(err && err.name === 'AbortError')) copyToClipboard(text);
+          });
+        return;
+      } catch (err) {
+        copyToClipboard(text);
+        return;
       }
-      shareTimer = setTimeout(() => {
-        fortuneShareLabel.textContent = 'Copy';
-        fortuneShareBtn.classList.remove('is-copied');
-      }, 1600);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text)
-        .then(() => settle(true))
-        .catch(() => settle(fallbackCopy(text)));
-    } else {
-      settle(fallbackCopy(text));
     }
-    return { ok: true, copied: false, text };
+    copyToClipboard(text);
   }
 
   function fallbackCopy(text) {

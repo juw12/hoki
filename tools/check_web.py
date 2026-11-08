@@ -136,6 +136,19 @@ with sync_playwright() as p:
     check(isinstance(share_text, str) and f["grade"] in share_text and f["line"] in share_text,
           f"share text composes grade + blessing ({share_text!r})")
 
+    # Native share sheet path: stub navigator.share, tap, confirm it receives the composed text.
+    dpage.evaluate("""() => {
+      window.__shareData = null;
+      Object.defineProperty(navigator, 'share', { configurable: true,
+        value: (d) => { window.__shareData = d; return Promise.resolve(); } });
+      Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    }""")
+    dpage.click("#fortune-share")
+    dpage.wait_for_timeout(80)
+    share_data = dpage.evaluate("window.__shareData")
+    check(isinstance(share_data, dict) and f["grade"] in share_data.get("text", "") and f["line"] in share_data.get("text", ""),
+          f"native share sheet receives grade + blessing ({(share_data or {}).get('text', '')!r})")
+
     # One per day: the same date gives the same fortune across a reload.
     f_index_before = f["index"]
     dpage.reload()
