@@ -14,6 +14,7 @@
 <g id="hoki-cushion">
     <path d="M30 236 C30 224 40 218 54 218 L186 218 C200 218 210 224 210 236 L210 242 C210 252 200 256 186 256 L54 256 C40 256 30 252 30 242 Z" fill="#b7443a" stroke="#7c2c26" stroke-width="2"/>
     <path d="M40 226 C42 221 48 220 56 220 L184 220 C192 220 198 221 200 226 C176 232 64 232 40 226 Z" fill="#cb5c4d"/>
+    <path d="M32 244 C34 251 42 255 54 255 L186 255 C198 255 206 251 208 244 C196 250 44 250 32 244 Z" fill="#9e3830" opacity="0.6"/>
     <path d="M42 247 C90 251 150 251 198 247" fill="none" stroke="#e3b24e" stroke-width="1.6" opacity="0.9"/>
     <path d="M30 241 L25.5 254 L34.5 254 Z" fill="#d9a441"/>
     <circle cx="30" cy="238" r="4.5" fill="#e3b24e"/>
@@ -21,11 +22,13 @@
     <circle cx="210" cy="238" r="4.5" fill="#e3b24e"/>
   </g>
   <g id="hoki-body">
-    <path d="M176 214 C200 214 212 196 206 182 C203 175 195 177 197 184 C201 196 192 204 178 204 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.2" stroke-linejoin="round"/>
-    <path d="M197 184 C195 177 203 175 206 182 C207 186 207 190 205 193 C201 192 198 189 197 184 Z" fill="#e9a65f"/>
+    <path d="M176 216 C206 218 220 196 212 177 C208 168 196 170 199 179 C205 193 195 205 178 204 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M199 179 C196 170 208 168 212 177 C214 183 214 189 212 194 C206 192 201 186 199 179 Z" fill="#e9a65f"/>
     <path d="M120 116 C166 116 186 160 185 194 C184 220 160 230 120 230 C80 230 56 220 55 194 C54 160 74 116 120 116 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4"/>
     <path d="M168 140 C182 160 186 182 184 198 C182 218 160 228 124 229 C150 222 170 206 172 186 C174 168 172 152 168 140 Z" fill="#f1e4d1"/>
-    <ellipse cx="82" cy="200" rx="12" ry="9" fill="#6a574b" opacity="0.85"/>
+    <ellipse cx="114" cy="194" rx="36" ry="27" fill="#ffffff" opacity="0.55"/>
+    <path d="M64 188 C70 180 84 180 90 188 C94 196 88 206 78 208 C70 209 63 202 62 196 Z" fill="#e9a65f"/>
+    <ellipse cx="73" cy="202" rx="6" ry="4.5" fill="#6a574b" opacity="0.9"/>
     <path d="M71 141 Q120 168 169 141 Q172 146 168 152 Q120 180 72 152 Q68 146 71 141 Z" fill="#c8473c" stroke="#7c2c26" stroke-width="1.8" stroke-linejoin="round"/>
   </g>
   <g id="hoki-head">
@@ -35,6 +38,8 @@
     <path d="M174 62 C176 46 173 35 169 31 C160 35 151 42 145 47 Z" fill="#f3b4a6"/>
     <ellipse cx="120" cy="90" rx="66" ry="54" fill="#fffaf2"/>
     <path d="M138 42 C148 40 158 43 163 50 C169 57 174 65 177 74 C165 74 152 68 145 61 C140 55 137 48 138 42 Z" fill="#e9a65f"/>
+    <ellipse cx="88" cy="58" rx="9" ry="6" fill="#6a574b" opacity="0.9"/>
+    <ellipse cx="116" cy="68" rx="26" ry="12" fill="#ffffff" opacity="0.6"/>
     <path d="M64 118 C74 136 96 144 120 144 C144 144 166 136 176 118 C166 130 146 138 120 138 C94 138 74 130 64 118 Z" fill="#f1e4d1"/>
     <ellipse cx="120" cy="90" rx="66" ry="54" fill="none" stroke="#7a5f4c" stroke-width="2.4"/>
     <ellipse cx="84" cy="108" rx="11" ry="6.5" fill="#f2a493" opacity="0.55"/>
@@ -51,19 +56,19 @@
     <circle cx="116.5" cy="154.5" r="2.4" fill="#f8e3a6"/>
   </g>
   <g id="hoki-coin">
-    <ellipse cx="150" cy="191" rx="19" ry="22" fill="#e3b24e" stroke="#b98a32" stroke-width="2"/>
-    <ellipse cx="150" cy="191" rx="14" ry="17" fill="none" stroke="#c99a3c" stroke-width="1.4"/>
-    <path d="M144 184 L156 184 M142 191 L158 191 M144 198 L156 198" fill="none" stroke="#b98a32" stroke-width="1.6" stroke-linecap="round" opacity="0.8"/>
-    <ellipse cx="141.5" cy="183" rx="3" ry="5.5" fill="#f6dc9a" opacity="0.8"/>
-    <ellipse cx="146" cy="209" rx="17" ry="11.5" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.2"/>
-    <path d="M140 202.5 Q140.5 207 141.5 210 M149 202 Q149.5 206.5 150 210" fill="none" stroke="#7a5f4c" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
+    <ellipse cx="148" cy="190" rx="19" ry="23" fill="#e3b24e" stroke="#b98a32" stroke-width="2"/>
+    <ellipse cx="148" cy="190" rx="14" ry="18" fill="none" stroke="#c99a3c" stroke-width="1.4"/>
+    <ellipse cx="139.5" cy="180" rx="3" ry="6" fill="#f6dc9a" opacity="0.85"/>
+    <text x="148" y="196" font-size="15" text-anchor="middle" fill="#8a6418" font-family="'Noto Serif SC', 'Songti SC', SimSun, serif" font-weight="700">福</text>
+    <ellipse cx="163" cy="208" rx="13" ry="10.5" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.2"/>
+    <path d="M158.5 201.5 Q159 205.5 160 208.5 M166 201.5 Q166.5 205.5 167 208.5" fill="none" stroke="#7a5f4c" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
     <ellipse cx="94" cy="227" rx="15" ry="7.5" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.2"/>
     <ellipse cx="146" cy="227" rx="15" ry="7.5" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.2"/>
     <path d="M90 222 L90 226 M98 222 L98 226 M142 222 L142 226 M150 222 L150 226" fill="none" stroke="#7a5f4c" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
   </g>
   <g id="hoki-paw">
     <path d="M55.6 159 L30.1 94.8 A11 11 0 0 1 49.9 85.2 L84.4 145 A16 16 0 0 1 55.6 159 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4" stroke-linejoin="round"/>
-    <path d="M77 141 L54 95" fill="none" stroke="#f1e4d1" stroke-width="6" stroke-linecap="round"/>
+    <path d="M72 132 L55 98" fill="none" stroke="#f1e4d1" stroke-width="4.5" stroke-linecap="round" opacity="0.85"/>
     <ellipse cx="74" cy="158" rx="11" ry="8" fill="#fffaf2"/>
     <ellipse cx="38" cy="72" rx="19.5" ry="18.5" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4"/>
     <ellipse cx="38" cy="78" rx="7.5" ry="6" fill="#f3b4a6"/>

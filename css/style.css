@@ -103,7 +103,7 @@ body {
   align-items: center;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: env(safe-area-inset-top) 16px calc(20px + env(safe-area-inset-bottom));
+  padding: env(safe-area-inset-top) 16px calc(32px + env(safe-area-inset-bottom));
   background: transparent;
   overflow-x: hidden;
 }
@@ -288,6 +288,18 @@ html {
   width: 100%;
   height: 100%;
   overflow: visible;
+}
+
+/* The moon-gate halo breathes slowly so the scene feels alive before the first tap. */
+.scene .gate-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: halo 4.2s ease-in-out infinite;
+}
+
+@keyframes halo {
+  0%, 100% { opacity: 0.55; transform: scale(0.985); }
+  50% { opacity: 1; transform: scale(1.02); }
 }
 
 .cat.bump {
@@ -531,7 +543,8 @@ html {
 .toast {
   position: fixed;
   left: 50%;
-  top: calc(12px + env(safe-area-inset-top));
+  /* Below the header row, so it never covers the sound control. */
+  top: calc(78px + env(safe-area-inset-top));
   z-index: 50;
   display: flex;
   align-items: center;
@@ -658,7 +671,8 @@ body.widget .stage {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lantern {
+  .lantern,
+  .scene .gate-halo {
     animation: none;
   }
   .float,

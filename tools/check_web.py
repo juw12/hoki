@@ -75,7 +75,7 @@ with sync_playwright() as p:
     check(boost > boost_before + 0.2, f"boost rises with taps ({boost_before:.2f} -> {boost:.2f})")
 
     page.click("#cat")
-    page.wait_for_timeout(250)
+    page.wait_for_timeout(700)  # let the toast finish sliding in before the screenshot
     toast_text = page.inner_text("#toast")
     check("发" in toast_text, f"8th tap shows the 发 milestone ({toast_text!r})")
     check(page.inner_text("#next") == "28", f"next lucky number after 8 is {page.inner_text('#next')}")
