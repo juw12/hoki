@@ -356,21 +356,30 @@ html {
   font-family: var(--serif);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--gold-ink);
+  /* floaters spawn over the scene sky: light gold with a soft dark lift reads at day and night */
+  color: #f7d784;
   white-space: nowrap;
-  text-shadow: 0 0 6px #fffaf0, 0 0 2px #fffaf0, 0 1px 0 #fffaf0;
+  text-shadow: 0 1px 2px rgba(38, 24, 10, 0.6), 0 0 10px rgba(38, 24, 10, 0.4);
   animation: float-up 1.3s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
 }
 
 .float.big {
-  font-size: 2.6rem;
-  color: #b7443a;
-  animation-duration: 2s;
+  /* milestone seal: white on vermilion reads on cream and on the night sky */
+  font-size: 2.4rem;
+  line-height: 1;
+  padding: 0.14em 0.22em 0.18em;
+  border-radius: 14px;
+  color: #fff8ea;
+  background: #b7443a;
+  box-shadow: 0 0 0 3px #fff8ea, 0 8px 22px rgba(110, 40, 28, 0.35);
+  text-shadow: none;
+  animation-duration: 2.2s;
 }
 
 @keyframes float-up {
   0% { opacity: 0; transform: translate(-50%, -30%) scale(0.9); }
-  15% { opacity: 1; }
+  12% { opacity: 1; }
+  62% { opacity: 1; }
   100% { opacity: 0; transform: translate(-50%, -190%) scale(1.04); }
 }
 
@@ -633,9 +642,6 @@ html {
   .toast b {
     color: #e8786a;
   }
-  .float {
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-  }
 }
 
 /* ---------- daily fortune ---------- */
@@ -748,7 +754,8 @@ html {
   body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: auto 1fr auto;
+    /* header, spacer, cat, hint, spacer: cat + hint stay one block, centred with the side column */
+    grid-template-rows: auto 1fr auto auto 1fr;
     column-gap: 64px;
     justify-items: center;
     align-items: center;
@@ -764,6 +771,8 @@ html {
   }
 
   .stage {
+    grid-column: 1;
+    grid-row: 3;
     justify-self: end;
     width: min(42vw, calc((100vh - 140px) / 1.1), 480px);
   }
@@ -775,12 +784,14 @@ html {
   }
 
   .side {
-    grid-row: 2 / 4;
+    grid-column: 2;
+    grid-row: 3 / 5;
+    align-self: center;
   }
 
   .hint {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 4;
     justify-self: end;
     align-self: start;
     width: min(42vw, calc((100vh - 140px) / 1.1), 480px);
@@ -798,6 +809,16 @@ html {
   .actions {
     text-align: left;
     justify-content: flex-start;
+  }
+
+  .actions {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .actions .pill {
+    padding: 0 13px;
+    white-space: nowrap;
   }
 }
 
