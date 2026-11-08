@@ -332,9 +332,9 @@ html {
 }
 
 @keyframes float-up {
-  0% { opacity: 0; transform: translate(-50%, -30%) scale(0.9); }
-  15% { opacity: 1; }
-  100% { opacity: 0; transform: translate(-50%, -190%) scale(1.04); }
+  0% { opacity: 0; transform: translate(-50%, -50%) translateY(10px) scale(0.9); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) translateY(var(--rise, -64px)) scale(1.04); }
 }
 
 .coin {

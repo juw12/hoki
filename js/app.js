@@ -58,6 +58,8 @@
   const $ = (id) => document.getElementById(id);
   const catButton = $('cat');
   const fxLayer = $('fx');
+  const lanternL = document.querySelector('.lantern-left');
+  const lanternR = document.querySelector('.lantern-right');
   const glow = $('glow');
   const todayEl = $('today');
   const totalEl = $('total');
@@ -328,9 +330,35 @@
     const el = document.createElement('div');
     el.className = big ? 'float big' : 'float';
     el.textContent = text;
+    fxLayer.append(el);
+
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    let rise = -1.5 * h; // lively, height-proportional (matches the old feel)
+
+    // Keep the floater in the clear air between the two lanterns so it can
+    // never rise straight up through one. Measured from the live lantern boxes.
+    const L = lanternL && lanternL.getBoundingClientRect();
+    const R = lanternR && lanternR.getBoundingClientRect();
+    if (L && R && L.width > 0 && R.width > 0) {
+      const left = L.right + 8;
+      const right = R.left - 8;
+      if (right > left) {
+        if (w <= right - left) {
+          x = Math.min(Math.max(x, left + w / 2), right - w / 2);
+        } else {
+          // Too wide for the gap: centre it and fade before the lowest lantern
+          // point so it still never touches a lantern.
+          x = (left + right) / 2;
+          const ceiling = Math.max(L.bottom, R.bottom) + 6;
+          rise = Math.max(-1.5 * h, ceiling - y + h / 2);
+        }
+      }
+    }
+
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
-    fxLayer.append(el);
+    el.style.setProperty('--rise', `${rise.toFixed(1)}px`);
     el.addEventListener('animationend', () => el.remove());
   }
 
