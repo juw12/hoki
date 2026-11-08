@@ -100,6 +100,7 @@ with sync_playwright() as p:
     fgrade_phone = page.inner_text("#fortune-grade")
     check("吉" in fgrade_phone, f"phone shows a daily 吉 fortune ({fgrade_phone!r})")
     check(len(page.inner_text("#fortune-blessing").strip()) >= 10, "phone fortune has a blessing line")
+    check(page.is_visible("#fortune-share"), "phone shows the share action")
     check(not errors, f"no console errors ({errors})")
 
     # Widget mode
@@ -108,6 +109,7 @@ with sync_playwright() as p:
     wpage.goto(base + "?widget")
     wpage.wait_for_selector("#hoki-paw")
     check(not wpage.is_visible(".top") and not wpage.is_visible(".foot"), "widget mode hides chrome")
+    check(not wpage.is_visible("#fortune-share"), "widget hides the share action")
     wpage.screenshot(path=str(OUT / "widget.png"), omit_background=True)
 
     # Desktop browser
@@ -127,6 +129,12 @@ with sync_playwright() as p:
     side_h = dpage.locator(".side").bounding_box()["height"]
     stage_h = dpage.locator(".stage").bounding_box()["height"]
     check(side_h >= 0.78 * stage_h, f"right column not under-filled (side {side_h:.0f}px vs scene {stage_h:.0f}px)")
+
+    # Share action: a quiet copy button that composes grade + blessing.
+    check(dpage.is_visible("#fortune-share"), "desktop shows the share action")
+    share_text = dpage.evaluate("window.hoki.getShareText()")
+    check(isinstance(share_text, str) and f["grade"] in share_text and f["line"] in share_text,
+          f"share text composes grade + blessing ({share_text!r})")
 
     # One per day: the same date gives the same fortune across a reload.
     f_index_before = f["index"]

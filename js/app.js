@@ -71,6 +71,8 @@
   const fortuneGradeEnEl = $('fortune-grade-en');
   const fortuneLineEl = $('fortune-blessing');
   const fortuneDateEl = $('fortune-date');
+  const fortuneShareBtn = $('fortune-share');
+  const fortuneShareLabel = $('fortune-share-label');
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const params = new URLSearchParams(location.search);
@@ -215,6 +217,62 @@
       weekday: 'short', day: 'numeric', month: 'short',
     });
   }
+
+  // One tap shares today's fortune: a quiet ghost button in the card footer.
+  function fortuneShareText() {
+    if (!currentFortune) {
+      return '';
+    }
+    return `${currentFortune.grade} · ${currentFortune.en} — ${currentFortune.line}`;
+  }
+
+  let shareTimer = null;
+  function shareFortune() {
+    const text = fortuneShareText();
+    if (!text) {
+      return { ok: false, copied: false, text };
+    }
+    const settle = (copied) => {
+      fortuneShareLabel.textContent = copied ? 'Copied' : 'Copy';
+      fortuneShareBtn.classList.toggle('is-copied', copied);
+      if (shareTimer) {
+        clearTimeout(shareTimer);
+      }
+      shareTimer = setTimeout(() => {
+        fortuneShareLabel.textContent = 'Copy';
+        fortuneShareBtn.classList.remove('is-copied');
+      }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => settle(true))
+        .catch(() => settle(fallbackCopy(text)));
+    } else {
+      settle(fallbackCopy(text));
+    }
+    return { ok: true, copied: false, text };
+  }
+
+  function fallbackCopy(text) {
+    try {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(area);
+      return ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  fortuneShareBtn.addEventListener('click', () => {
+    shareFortune();
+  });
 
   // Wave -1..1 -> arm angle: +1 = paw up (first angle), -1 = paw folded forward (second angle).
   function setPaw(wave) {
@@ -415,5 +473,5 @@
   }
 
   // Small hook for automated checks.
-  window.hoki = { tap, state, getBoost: () => boost, getAngle: () => pawAngle, getFortune: () => currentFortune };
+  window.hoki = { tap, state, getBoost: () => boost, getAngle: () => pawAngle, getFortune: () => currentFortune, getShareText: () => fortuneShareText() };
 })();

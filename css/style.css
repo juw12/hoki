@@ -522,12 +522,51 @@ html {
   color: var(--text);
 }
 
-.fortune-note {
-  margin: 12px 0 0;
+.fortune-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid var(--line);
+}
+
+.fortune-note {
+  margin: 0;
   font-size: 0.78rem;
   color: var(--muted);
+}
+
+.fortune-share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+
+.fortune-share:hover {
+  border-color: var(--gold);
+  color: var(--gold-ink);
+}
+
+.fortune-share:focus-visible {
+  outline: 2px solid var(--gold-ink);
+  outline-offset: 2px;
+}
+
+.fortune-share.is-copied {
+  color: var(--gold-ink);
+  border-color: var(--gold);
 }
 
 @media (prefers-color-scheme: dark) {

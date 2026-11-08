@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hoki">
-  <link rel="stylesheet" href="css/style.css?v=2.0.3">
+  <link rel="stylesheet" href="css/style.css?v=2.0.4">
 </head>
 <body>
   <header class="top">
@@ -106,7 +106,13 @@
       <span class="en" id="fortune-grade-en">Great fortune</span>
     </div>
     <p class="fortune-blessing" id="fortune-blessing">The luck of the day is on your side.</p>
-    <p class="fortune-note">New fortune at midnight</p>
+
+    <div class="fortune-foot">
+      <p class="fortune-note">New fortune at midnight</p>
+      <button class="fortune-share" id="fortune-share" type="button" aria-label="Copy today's fortune">
+        <span id="fortune-share-label">Copy</span>
+      </button>
+    </div>
   </section>
 
   <footer class="foot">
@@ -126,6 +132,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript>Hoki needs JavaScript to wave.</noscript>
-  <script src="js/app.js?v=2.0.3" defer></script>
+  <script src="js/app.js?v=2.0.4" defer></script>
 </body>
 </html>
