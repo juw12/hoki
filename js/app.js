@@ -72,6 +72,8 @@
     { zh: '喜', en: 'A happy day. Share one good thing.' },
   ];
 
+  let currentFortune = FORTUNES[0];
+
   function renderFortune() {
     const now = new Date();
     const dayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
@@ -79,14 +81,91 @@
     for (const ch of dayKey) {
       hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
     }
-    const fortune = FORTUNES[hash % FORTUNES.length];
+    currentFortune = FORTUNES[hash % FORTUNES.length];
     const seal = $('fortune-seal');
     if (!seal) {
       return;
     }
-    seal.textContent = fortune.zh.slice(-1);
-    $('fortune-name').textContent = fortune.zh;
-    $('fortune-line').textContent = fortune.en;
+    seal.textContent = currentFortune.zh.slice(-1);
+    $('fortune-name').textContent = currentFortune.zh;
+    $('fortune-line').textContent = currentFortune.en;
+  }
+
+  // Share today's fortune: native share sheet when available, copy otherwise.
+  const fortuneShareBtn = $('fortune-share');
+  const fortuneShareLabel = $('fortune-share-label');
+  let shareTimer = null;
+
+  function fortuneShareText() {
+    return currentFortune ? `${currentFortune.zh} · ${currentFortune.en}` : '';
+  }
+
+  function flashShare(label) {
+    if (!fortuneShareLabel) {
+      return;
+    }
+    fortuneShareLabel.textContent = label;
+    if (fortuneShareBtn) {
+      fortuneShareBtn.classList.add('is-copied');
+    }
+    clearTimeout(shareTimer);
+    shareTimer = setTimeout(() => {
+      fortuneShareLabel.textContent = 'Share';
+      if (fortuneShareBtn) {
+        fortuneShareBtn.classList.remove('is-copied');
+      }
+    }, 1600);
+  }
+
+  function fallbackCopyFortune(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch {
+      ok = false;
+    }
+    ta.remove();
+    flashShare(ok ? 'Copied' : 'Copy failed');
+  }
+
+  async function copyFortuneText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      flashShare('Copied');
+    } catch {
+      fallbackCopyFortune(text);
+    }
+  }
+
+  async function shareFortune() {
+    const text = fortuneShareText();
+    if (!text) {
+      return;
+    }
+    const payload = { text, title: "Hoki · today's fortune" };
+    const canNative = typeof navigator.share === 'function' && (!navigator.canShare || navigator.canShare(payload));
+    if (canNative) {
+      try {
+        await navigator.share(payload);
+        flashShare('Shared');
+      } catch (err) {
+        if (!err || err.name !== 'AbortError') {
+          copyFortuneText(text);
+        }
+      }
+    } else {
+      copyFortuneText(text);
+    }
+  }
+
+  if (fortuneShareBtn) {
+    fortuneShareBtn.addEventListener('click', shareFortune);
   }
 
   function applyTimeOfDay() {
@@ -391,5 +470,5 @@
   }
 
   // Small hook for automated checks.
-  window.hoki = { tap, state, getBoost: () => boost, getAngle: () => pawAngle };
+  window.hoki = { tap, state, getBoost: () => boost, getAngle: () => pawAngle, getFortune: () => currentFortune, getShareText: fortuneShareText };
 })();

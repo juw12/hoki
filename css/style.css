@@ -693,6 +693,40 @@ html {
   color: var(--muted);
 }
 
+.fortune-text {
+  flex: 1;
+}
+
+.fortune-share {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 0.85rem var(--sans);
+  cursor: pointer;
+  transition: border-color 0.25s, color 0.25s;
+}
+
+.fortune-share:hover {
+  border-color: var(--gold);
+  color: var(--gold-ink);
+}
+
+.fortune-share:focus-visible {
+  outline: 2px solid var(--gold-ink);
+  outline-offset: 2px;
+}
+
+.fortune-share.is-copied {
+  border-color: var(--gold);
+  color: var(--gold-ink);
+}
+
 /* ---------- larger screens: scene left, luck right ---------- */
 
 .side {
