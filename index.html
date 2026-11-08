@@ -1,50 +1,108 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-time="day">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Hoki - tap the lucky cat for a luck boost</title>
   <meta name="description" content="A waving Chinese lucky cat (招财猫) for your home screen or desktop. Tap it for a luck boost. Offline, no account.">
-  <meta name="theme-color" content="#8f0f1c">
+  <meta name="theme-color" content="#f6f2eb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14110f" media="(prefers-color-scheme: dark)">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hoki">
-  <link rel="preload" href="assets/fonts/pixelify-sans.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/style.css?v=1.1.0">
+  <link rel="stylesheet" href="css/style.css?v=2.0.0">
 </head>
 <body>
   <header class="top">
-    <h1>Hoki <span lang="zh">招财猫</span></h1>
-    <button id="sound" class="chip" type="button" aria-pressed="true">Sound on</button>
+    <h1 class="brand">Hoki <span lang="zh">招财猫</span></h1>
+    <button id="sound" class="icon-btn" type="button" aria-pressed="true" aria-label="Sound on">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 3.5a1.2 1.2 0 0 1 1.2 1.2v.5a5.6 5.6 0 0 1 4.4 5.5v3.6l1.6 2.3a.8.8 0 0 1-.7 1.2H5.5a.8.8 0 0 1-.7-1.2l1.6-2.3v-3.6a5.6 5.6 0 0 1 4.4-5.5v-.5A1.2 1.2 0 0 1 12 3.5Z"/>
+        <path d="M9.8 19.2a2.3 2.3 0 0 0 4.4 0"/>
+        <path class="mute-line" d="M4 4l16 16"/>
+      </svg>
+    </button>
   </header>
 
-  <main class="stage">
+  <main class="stage" id="stage">
+    <svg class="scene" viewBox="0 0 320 320" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" class="sky-top"/>
+          <stop offset="0.62" class="sky-mid"/>
+          <stop offset="1" class="sky-low"/>
+        </linearGradient>
+        <clipPath id="gate"><circle cx="160" cy="160" r="146"/></clipPath>
+      </defs>
+      <circle cx="160" cy="160" r="158" class="gate-halo"/>
+      <g clip-path="url(#gate)">
+        <rect width="320" height="320" fill="url(#sky)"/>
+        <g class="stars">
+          <circle cx="62" cy="70" r="1.2"/><circle cx="96" cy="44" r="0.9"/><circle cx="210" cy="52" r="1.1"/>
+          <circle cx="244" cy="88" r="0.8"/><circle cx="128" cy="96" r="0.8"/><circle cx="270" cy="128" r="1"/>
+          <circle cx="48" cy="120" r="0.9"/><circle cx="180" cy="30" r="0.9"/>
+        </g>
+        <circle class="orb" cx="236" cy="96" r="22"/>
+        <path class="hill-far" d="M0 212 C40 186 76 180 112 196 C142 208 170 176 210 172 C246 168 280 188 320 198 L320 320 L0 320 Z"/>
+        <g class="temple">
+          <rect x="236" y="176" width="40" height="34"/>
+          <path d="M224 180 Q256 170 288 180 L292 174 Q256 160 220 174 Z"/>
+          <rect x="244" y="156" width="24" height="12"/>
+          <path d="M236 160 Q256 152 276 160 L280 155 Q256 142 232 155 Z"/>
+          <rect x="253" y="190" width="6" height="20" class="temple-light"/>
+        </g>
+        <path class="hill-near" d="M0 246 C48 228 98 230 150 242 C200 254 252 236 320 234 L320 320 L0 320 Z"/>
+      </g>
+      <circle cx="160" cy="160" r="146" class="gate-ring"/>
+      <g class="lantern lantern-left">
+        <line x1="70" y1="0" x2="70" y2="40"/>
+        <rect x="63" y="38" width="14" height="5" rx="1.5" class="cap"/>
+        <ellipse cx="70" cy="58" rx="15" ry="17" class="paper"/>
+        <path d="M62 46 Q58 58 62 70 M78 46 Q82 58 78 70 M70 41 L70 75" class="rib"/>
+        <rect x="63" y="73" width="14" height="5" rx="1.5" class="cap"/>
+        <line x1="70" y1="78" x2="70" y2="90" class="tassel"/>
+      </g>
+      <g class="lantern lantern-right">
+        <line x1="250" y1="0" x2="250" y2="26"/>
+        <rect x="244" y="24" width="12" height="4.5" rx="1.5" class="cap"/>
+        <ellipse cx="250" cy="41" rx="12.5" ry="14" class="paper"/>
+        <path d="M243 31 Q240 41 243 51 M257 31 Q260 41 257 51 M250 28 L250 54" class="rib"/>
+        <rect x="244" y="53" width="12" height="4.5" rx="1.5" class="cap"/>
+        <line x1="250" y1="57.5" x2="250" y2="68" class="tassel"/>
+      </g>
+    </svg>
+    <div class="ground" aria-hidden="true"></div>
     <div class="glow" id="glow" aria-hidden="true"></div>
-    <button id="cat" class="cat" type="button" aria-label="Tap the lucky cat for a luck boost"></button>
+    <button id="cat" class="cat" type="button" aria-label="Tap the lucky cat for a luck boost" aria-describedby="hint"></button>
     <div class="fx" id="fx" aria-hidden="true"></div>
   </main>
 
-  <section class="stats" aria-label="Your luck">
-    <p class="today"><span id="today">0</span><small>luck today</small></p>
-    <div class="boost">
-      <div class="bar" role="progressbar" aria-label="Luck boost" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="boost-bar"><span></span></div>
-      <small>Luck boost <b id="boost-pct">0%</b></small>
+  <p class="hint" id="hint">Tap Hoki for a little luck</p>
+
+  <section class="card stats" aria-label="Your luck">
+    <div class="today">
+      <span class="num" id="today">0</span>
+      <span class="label">luck today</span>
     </div>
-    <p class="total">All time <b id="total">0</b> · next lucky number <b id="next">8</b></p>
+    <div class="boost">
+      <div class="boost-row"><span>Luck boost</span><b id="boost-pct">0%</b></div>
+      <div class="bar" role="progressbar" aria-label="Luck boost" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="boost-bar"><span></span></div>
+    </div>
+    <p class="total">All time <b id="total">0</b><span class="dot" aria-hidden="true">·</span>next lucky number <b id="next">8</b></p>
   </section>
 
   <footer class="foot">
     <div class="actions">
-      <button id="install" class="chip" type="button">Add to home screen</button>
-      <button id="desktop-toggle" class="chip" type="button" aria-expanded="false" aria-controls="desktop">Desktop widget</button>
+      <button id="install" class="pill" type="button">Add to home screen</button>
+      <button id="desktop-toggle" class="pill" type="button" aria-expanded="false" aria-controls="desktop">Desktop widget</button>
     </div>
     <div id="install-help" class="panel" hidden></div>
     <div id="desktop" class="panel" hidden>
       <p><b>Windows:</b> paste this into PowerShell. Hoki sits on your desktop, waves all day, and remembers your luck.</p>
-      <div class="cmd"><code id="install-cmd">irm https://juw12.github.io/hoki/desktop/install.ps1 | iex</code><button id="copy" class="chip" type="button">Copy</button></div>
+      <div class="cmd"><code id="install-cmd">irm https://juw12.github.io/hoki/desktop/install.ps1 | iex</code><button id="copy" class="pill small" type="button">Copy</button></div>
       <p class="fine">Drag to move. Right-click for size, sound, always on top and start with Windows.</p>
     </div>
     <p class="fine">For fun. Luck not guaranteed. Saved only on this device.</p>
@@ -52,6 +110,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript>Hoki needs JavaScript to wave.</noscript>
-  <script src="js/app.js?v=1.1.0" defer></script>
+  <script src="js/app.js?v=2.0.0" defer></script>
 </body>
 </html>

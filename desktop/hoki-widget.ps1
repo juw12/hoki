@@ -11,7 +11,7 @@ it does not read or write your saved luck).
 param(
     [string]$Snapshot,
     [int]$SnapshotTaps = 0,
-    [int]$SnapshotFrame = 0,
+    [double]$SnapshotWave = 1,
     [ValidateSet('Small', 'Medium', 'Large')]
     [string]$SnapshotSize = 'Large'
 )
@@ -117,6 +117,8 @@ $vbH = $viewBox[3]
 $svgRoot = $svg.DocumentElement
 $pawPoint = $svgRoot.GetAttribute('data-paw').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
 $counterBox = $svgRoot.GetAttribute('data-counter').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
+$pivot = $svgRoot.GetAttribute('data-pivot').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
+$pawRange = $svgRoot.GetAttribute('data-paw-range').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
 
 $BrushConverter = New-Object Windows.Media.BrushConverter
 
@@ -197,8 +199,6 @@ function New-ArtShape($element) {
 $art = New-Object Windows.Controls.Canvas
 $art.Width = $vbW
 $art.Height = $vbH
-# Pixel art: no anti-aliasing, so sprite pixels stay crisp and seam-free.
-[Windows.Media.RenderOptions]::SetEdgeMode($art, [Windows.Media.EdgeMode]::Aliased)
 $scene = New-Object Windows.Controls.Canvas
 $scene.RenderTransform = New-Object Windows.Media.TranslateTransform(-$vbX, -$vbY)
 [void]$art.Children.Add($scene)
@@ -217,7 +217,7 @@ $glow.IsHitTestVisible = $false
 [Windows.Controls.Canvas]::SetTop($glow, 20)
 [void]$scene.Children.Add($glow)
 
-$pawFrames = New-Object System.Collections.ArrayList
+$pawLayer = $null
 foreach ($group in $svg.DocumentElement.ChildNodes) {
     if ($group.LocalName -ne 'g') {
         continue
@@ -232,32 +232,30 @@ foreach ($group in $svg.DocumentElement.ChildNodes) {
             [void]$layer.Children.Add($shape)
         }
     }
-    if ($group.GetAttribute('id') -match '^hoki-paw-\d+$') {
-        $layer.Visibility = 'Collapsed'
-        [void]$pawFrames.Add($layer)
+    if ($group.GetAttribute('id') -eq 'hoki-paw') {
+        # The raised arm rotates around data-pivot, exactly like the web app.
+        $pawLayer = $layer
+        $pawLayer.RenderTransform = New-Object Windows.Media.RotateTransform(0, $pivot[0], $pivot[1])
     }
     [void]$scene.Children.Add($layer)
 }
-$script:shownFrame = -1
-function Show-PawFrame([int]$index) {
-    if ($index -eq $script:shownFrame) {
+# Same mapping as js/app.js: wave +1 = paw up (first angle), -1 = folded forward (second angle).
+function Set-PawWave([double]$wave) {
+    if ($null -eq $pawLayer) {
         return
     }
-    for ($i = 0; $i -lt $pawFrames.Count; $i++) {
-        $pawFrames[$i].Visibility = if ($i -eq $index) { 'Visible' } else { 'Collapsed' }
-    }
-    $script:shownFrame = $index
+    $pawLayer.RenderTransform.Angle = $pawRange[0] + ((1 - $wave) / 2) * ($pawRange[1] - $pawRange[0])
 }
-Show-PawFrame 0
+Set-PawWave 1
 
 # Today's count, written on the red cushion.
 $counter = New-Object Windows.Controls.TextBlock
 $counter.Width = $counterBox[2]
 $counter.TextAlignment = 'Center'
-$counter.FontFamily = New-Object Windows.Media.FontFamily('Consolas, Microsoft YaHei UI')
-$counter.FontWeight = 'Bold'
+$counter.FontFamily = New-Object Windows.Media.FontFamily('Palatino Linotype, Georgia, Microsoft YaHei UI')
+$counter.FontWeight = 'SemiBold'
 $counter.FontSize = 15
-$counter.Foreground = $BrushConverter.ConvertFromString('#f5c542')
+$counter.Foreground = $BrushConverter.ConvertFromString('#fff3df')
 $counter.IsHitTestVisible = $false
 [Windows.Controls.Canvas]::SetLeft($counter, $counterBox[0])
 [Windows.Controls.Canvas]::SetTop($counter, $counterBox[1])
@@ -385,10 +383,7 @@ function Update-Frame {
     $script:boost *= [Math]::Pow(0.5, $dt / $BoostHalfLifeSec)
     $speed = $BaseWavesPerSec + $script:boost * $MaxExtraWavesPerSec
     $script:phase += $dt * $speed * 2 * [Math]::PI
-    # Same mapping as js/app.js: wave -1..1 -> sprite frame 0 (up) .. last (folded).
-    $last = $pawFrames.Count - 1
-    $frameIndex = [int][Math]::Round(((1 - [Math]::Sin($script:phase)) / 2) * $last)
-    Show-PawFrame ([Math]::Min($last, [Math]::Max(0, $frameIndex)))
+    Set-PawWave ([Math]::Sin($script:phase))
     $glow.Opacity = $script:boost * 0.8
     foreach ($child in @($fx.Children)) {
         if ($child.Tag -lt $now) {
@@ -413,7 +408,7 @@ function Invoke-Tap {
     Show-Float "+1 $blessing" ($pawPoint[0] + (Get-Random -Minimum -12 -Maximum 12)) ($pawPoint[1] - 12) 22
     if ($Milestones -contains $state.today) {
         $script:boost = 1.0
-        Show-Float "$($state.today) $Fa!" 120 70 40
+        Show-Float "$($state.today) $Fa!" 150 14 34
         Invoke-Bell $true
     } else {
         Invoke-Bell $false
@@ -427,7 +422,7 @@ if ($Snapshot) {
     for ($i = 0; $i -lt $SnapshotTaps; $i++) {
         Invoke-Tap
     }
-    Show-PawFrame ([Math]::Min($pawFrames.Count - 1, [Math]::Max(0, $SnapshotFrame)))
+    Set-PawWave $SnapshotWave
     $glow.Opacity = $script:boost * 0.8
     $width = $WidgetWidths[$state.size]
     $height = [Math]::Round($width * $vbH / $vbW)

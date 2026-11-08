@@ -1,61 +1,47 @@
-"""Build assets/icon.svg and PNG icons (180/192/512) from assets/cat.svg.
+"""Build assets/icon.svg from assets/cat.svg, then render the PNG icons with Edge (Playwright).
 
 Run from the repo root:  python tools/make_icons.py
-Pure Python + Pillow: the cat is pixel art made of 1-pixel runs, so it is rasterised directly
-(no browser needed). Uses the body plus paw frame 0.
+The icon is the cat inside a small moon gate on warm paper, matching the app.
 """
+import os
 import re
 from pathlib import Path
 
-from PIL import Image
+from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
-BACKGROUND = "#8f0f1c"
-RING = "#a8162a"
 
-cat_svg = (ASSETS / "cat.svg").read_text(encoding="utf-8")
-view_w, view_h = (int(float(v)) for v in re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', cat_svg).groups())
-groups = dict(re.findall(r'<g id="([^"]+)"[^>]*>(.*?)</g>', cat_svg, re.S))
-icon_parts = groups["hoki-body"] + groups["hoki-paw-0"]
-runs = re.compile(r"M(\d+) (\d+)h(\d+)v(\d+)h-\d+z")
-px_size = int(runs.search(icon_parts).group(4))
+cat = (ASSETS / "cat.svg").read_text(encoding="utf-8")
+# Keep only the drawing (the <g> layers), dropping the outer <svg> and comments.
+inner = re.sub(r"<!--.*?-->", "", cat, flags=re.S)
+inner = inner[inner.index("<g "):inner.rindex("</svg>")]
 
-# Square canvas, ~16% padding so the cat survives maskable cropping.
-side = round(max(view_w, view_h) * 1.32)
-offset_x = (side - view_w) // 2
-offset_y = (side - view_h) // 2
+icon = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9cc3e4"/>
+      <stop offset="0.65" stop-color="#dcebf3"/>
+      <stop offset="1" stop-color="#f6efe0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#f6f2eb"/>
+  <circle cx="256" cy="232" r="186" fill="url(#sky)"/>
+  <path d="M70 300 C130 268 190 270 256 288 C320 306 380 278 442 280 L442 330 C400 410 330 418 256 418 C170 418 110 400 70 330 Z" fill="#b9c7a5"/>
+  <circle cx="256" cy="232" r="186" fill="none" stroke="#e7dccb" stroke-width="16"/>
+  <g transform="translate(96 72) scale(1.42)">
+{inner}  </g>
+</svg>
+"""
+(ASSETS / "icon.svg").write_text(icon, encoding="utf-8", newline="\n")
 
-icon_svg = (
-    f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {side} {side}" shape-rendering="crispEdges">\n'
-    f'  <rect width="{side}" height="{side}" fill="{BACKGROUND}"/>\n'
-    f'  <circle cx="{side / 2}" cy="{side / 2}" r="{side * 0.42}" fill="{RING}"/>\n'
-    f'  <g transform="translate({offset_x} {offset_y})">{icon_parts}</g>\n'
-    f"</svg>\n"
-)
-(ASSETS / "icon.svg").write_text(icon_svg, encoding="utf-8")
-
-
-def hex_rgb(value):
-    return tuple(int(value[i : i + 2], 16) for i in (1, 3, 5))
-
-
-# Rasterise at 1 image pixel per sprite pixel, then scale up with nearest-neighbour.
-cells = side // px_size
-base = Image.new("RGB", (cells, cells), hex_rgb(BACKGROUND))
-pixels = base.load()
-centre = cells / 2
-for y in range(cells):
-    for x in range(cells):
-        if (x + 0.5 - centre) ** 2 + (y + 0.5 - centre) ** 2 <= (cells * 0.42) ** 2:
-            pixels[x, y] = hex_rgb(RING)
-for fill, path in re.findall(r'fill="(#[0-9a-f]{6})" d="([^"]+)"', icon_parts):
-    for x, y, run, _ in runs.findall(path):
-        for k in range(int(run) // px_size):
-            pixels[(int(x) + offset_x) // px_size + k, (int(y) + offset_y) // px_size] = hex_rgb(fill)
-
-for size in (180, 192, 512):
-    big = base.resize((cells * (size // cells + 1),) * 2, Image.NEAREST)
-    big.resize((size, size), Image.NEAREST).save(ASSETS / f"icon-{size}.png")
-
-print("icons written to", ASSETS)
+with sync_playwright() as p:
+    browser = p.chromium.launch(channel="msedge")
+    page = browser.new_page(viewport={"width": 512, "height": 512})
+    page.set_content(f"<html><body style='margin:0;background:transparent'>{icon}</body></html>")
+    for size in (180, 192, 512):
+        page.set_viewport_size({"width": size, "height": size})
+        page.evaluate(f"document.querySelector('svg').setAttribute('width', {size}); document.querySelector('svg').setAttribute('height', {size});")
+        page.locator("svg").screenshot(path=str(ASSETS / f"icon-{size}.png"), omit_background=True)
+        print("wrote", ASSETS / f"icon-{size}.png", flush=True)
+os._exit(0)

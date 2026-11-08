@@ -51,17 +51,19 @@ with sync_playwright() as p:
     page.on("pageerror", lambda e: errors.append(str(e)))
     page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
     page.goto(base)
-    page.wait_for_selector("#hoki-paw-0")
+    page.wait_for_selector("#hoki-paw")
 
-    seen_frames = set()
+    angles = []
     for _ in range(16):
-        seen_frames.add(page.evaluate("window.hoki.getFrame()"))
+        angles.append(page.evaluate("window.hoki.getAngle()"))
         page.wait_for_timeout(90)
-    visible = page.evaluate("[...document.querySelectorAll('[id^=hoki-paw-]')].filter(g => g.getAttribute('display') !== 'none').length")
-    check(len(seen_frames) >= 3, f"paw cycles through sprite frames on its own ({sorted(seen_frames)})")
-    check(visible == 1, f"exactly one paw frame visible at a time ({visible})")
-    font_ok = page.evaluate("document.fonts.check('16px \"Pixelify Sans\"')")
-    check(font_ok, "pixel font loaded")
+    spread = max(angles) - min(angles)
+    check(spread > 6, f"paw waves smoothly on its own (angle spread {spread:.1f} deg)")
+    check(len({round(a, 1) for a in angles}) >= 8, "paw moves continuously, not in a few frames")
+    serif = page.evaluate("getComputedStyle(document.querySelector('.brand')).fontFamily")
+    check("serif" in serif.lower() and "pixel" not in serif.lower(), f"serif display type ({serif[:40]})")
+    scene_ok = page.evaluate("!!document.querySelector('.scene .gate-ring') && document.documentElement.dataset.time.length > 0")
+    check(scene_ok, "moon-gate scene with time of day")
     page.screenshot(path=str(OUT / "phone_idle.png"))
 
     boost_before = page.evaluate("window.hoki.getBoost()")
@@ -80,7 +82,7 @@ with sync_playwright() as p:
     page.screenshot(path=str(OUT / "phone_milestone.png"))
 
     page.reload()
-    page.wait_for_selector("#hoki-paw-0")
+    page.wait_for_selector("#hoki-paw")
     check(page.inner_text("#today") == "8" and page.inner_text("#total") == "8", "count survives reload")
 
     page.keyboard.press("Tab")
@@ -101,7 +103,7 @@ with sync_playwright() as p:
     widget = browser.new_context(viewport={"width": 260, "height": 300})
     wpage = widget.new_page()
     wpage.goto(base + "?widget")
-    wpage.wait_for_selector("#hoki-paw-0")
+    wpage.wait_for_selector("#hoki-paw")
     check(not wpage.is_visible(".top") and not wpage.is_visible(".foot"), "widget mode hides chrome")
     wpage.screenshot(path=str(OUT / "widget.png"), omit_background=True)
 
@@ -109,7 +111,7 @@ with sync_playwright() as p:
     desk = browser.new_context(viewport={"width": 1280, "height": 800})
     dpage = desk.new_page()
     dpage.goto(base)
-    dpage.wait_for_selector("#hoki-paw-0")
+    dpage.wait_for_selector("#hoki-paw")
     cat_box = dpage.locator("#cat").bounding_box()
     check(cat_box["y"] + cat_box["height"] <= 800, "cat fits a 1280x800 window")
     dpage.screenshot(path=str(OUT / "desktop.png"))

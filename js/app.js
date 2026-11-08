@@ -6,7 +6,8 @@
 
   const STORE_KEY = 'hoki.v1';
 
-  // Paw motion: assets/cat.svg holds sprite frames #hoki-paw-0 (up) .. #hoki-paw-N (folded).
+  // Paw motion: assets/cat.svg has one arm group #hoki-paw that rotates around data-pivot
+  // between the two angles in data-paw-range (degrees). The desktop widget reads the same values.
   const BASE_WAVES_PER_SEC = 0.7;
   const MAX_EXTRA_WAVES_PER_SEC = 2.6;
 
@@ -38,12 +39,33 @@
   const boostPct = $('boost-pct');
   const soundButton = $('sound');
   const toast = $('toast');
+  const hint = $('hint');
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const params = new URLSearchParams(location.search);
   if (params.has('widget')) {
     document.body.classList.add('widget');
   }
+
+  // Sky in the moon gate follows the local time of day (like Jeda's scenes).
+  function timeOfDay(hour) {
+    if (hour >= 5 && hour < 8) {
+      return 'dawn';
+    }
+    if (hour >= 8 && hour < 17) {
+      return 'day';
+    }
+    if (hour >= 17 && hour < 19) {
+      return 'dusk';
+    }
+    return 'night';
+  }
+  function applyTimeOfDay() {
+    const forced = params.get('time');
+    document.documentElement.dataset.time = forced || timeOfDay(new Date().getHours());
+  }
+  applyTimeOfDay();
+  setInterval(applyTimeOfDay, 60 * 1000);
 
   // ---------- state ----------
   const todayKey = () => {
@@ -104,8 +126,10 @@
   }
 
   // ---------- rendering ----------
-  let pawFrames = [];
-  let shownFrame = -1;
+  let paw = null;
+  let pivot = [0, 0];
+  let pawRange = [-10, 9];
+  let pawAngle = 0;
   let catSvg = null;
   let boost = 0;
   let phase = 0;
@@ -120,37 +144,31 @@
     todayEl.textContent = state.today.toLocaleString();
     totalEl.textContent = state.total.toLocaleString();
     nextEl.textContent = nextMilestone(state.today).toLocaleString();
-    soundButton.textContent = state.sound ? 'Sound on' : 'Sound off';
+    soundButton.setAttribute('aria-label', state.sound ? 'Sound on' : 'Sound off');
     soundButton.setAttribute('aria-pressed', String(state.sound));
   }
 
   function renderBoost() {
     const pct = Math.round(boost * 100);
-    // Fill in whole blocks (5% each) for a chunky retro meter.
-    boostBar.firstElementChild.style.width = `${Math.round(pct / 5) * 5}%`;
+    boostBar.firstElementChild.style.width = `${(boost * 100).toFixed(1)}%`;
     boostBar.setAttribute('aria-valuenow', String(pct));
     boostPct.textContent = `${pct}%`;
-    glow.style.opacity = String(0.3 + Math.round(boost * 7) / 10);
-    glow.style.transform = `scale(${1 + Math.round(boost * 4) * 0.05})`;
+    glow.style.opacity = String(0.15 + boost * 0.75);
+    glow.style.transform = `translate(-50%, -50%) scale(${(0.92 + boost * 0.18).toFixed(3)})`;
   }
 
-  // Map a smooth wave (-1..1) onto sprite frames: up, middle..., folded.
-  function frameForWave(wave) {
-    const last = pawFrames.length - 1;
-    return Math.min(last, Math.max(0, Math.round(((1 - wave) / 2) * last)));
-  }
-
-  function showPawFrame(index) {
-    if (index === shownFrame) {
+  // Wave -1..1 -> arm angle: +1 = paw up (first angle), -1 = paw folded forward (second angle).
+  function setPaw(wave) {
+    if (!paw) {
       return;
     }
-    pawFrames.forEach((group, i) => {
-      group.setAttribute('display', i === index ? 'inline' : 'none');
-    });
-    shownFrame = index;
+    const [up, folded] = pawRange;
+    pawAngle = up + ((1 - wave) / 2) * (folded - up);
+    paw.setAttribute('transform', `rotate(${pawAngle.toFixed(2)} ${pivot[0]} ${pivot[1]})`);
   }
 
   function frame(now) {
+    requestAnimationFrame(frame);
     const dt = Math.min(0.1, (now - lastFrame) / 1000);
     lastFrame = now;
     boost *= Math.pow(0.5, dt / BOOST_HALF_LIFE_SEC);
@@ -159,11 +177,8 @@
     }
     const speed = reducedMotion ? 0.35 : BASE_WAVES_PER_SEC + boost * MAX_EXTRA_WAVES_PER_SEC;
     phase += dt * speed * Math.PI * 2;
-    if (pawFrames.length) {
-      showPawFrame(frameForWave(Math.sin(phase)));
-    }
+    setPaw(Math.sin(phase));
     renderBoost();
-    requestAnimationFrame(frame);
   }
 
   // ---------- effects ----------
@@ -229,6 +244,7 @@
     floatText(`+1 ${blessing}`, x + (Math.random() - 0.5) * 30, y - 10);
     coins(x, y, milestone ? 18 : 3);
 
+    hint.classList.add('quiet');
     catButton.classList.add('bump');
     setTimeout(() => catButton.classList.remove('bump'), 90);
 
@@ -236,8 +252,9 @@
       boost = 1;
       ringBell(true);
       const rect = catButton.getBoundingClientRect();
-      floatText(milestone.zh, rect.left + rect.width / 2, rect.top + rect.height * 0.35, true);
-      showToast(`<b lang="zh">${milestone.zh}</b>${milestone.at} today: ${milestone.en}`);
+      // Above the head, so the celebration never covers the cat's face.
+      floatText(milestone.zh, rect.left + rect.width * 0.62, rect.top - rect.height * 0.02, true);
+      showToast(`<b lang="zh">${milestone.zh}</b><span><strong>${milestone.at} today</strong><br>${milestone.en}</span>`);
       if (navigator.vibrate) {
         navigator.vibrate([30, 40, 30, 40, 60]);
       }
@@ -322,7 +339,9 @@
     catSvg.removeAttribute('height');
     catSvg.setAttribute('aria-hidden', 'true');
     catSvg.setAttribute('focusable', 'false');
-    pawFrames = [...catSvg.querySelectorAll('[id^="hoki-paw-"]')];
+    paw = catSvg.querySelector('#hoki-paw');
+    pivot = (catSvg.dataset.pivot || '0 0').split(' ').map(Number);
+    pawRange = (catSvg.dataset.pawRange || '-10 9').split(' ').map(Number);
     requestAnimationFrame((now) => {
       lastFrame = now;
       frame(now);
@@ -336,5 +355,5 @@
   }
 
   // Small hook for automated checks.
-  window.hoki = { tap, state, getBoost: () => boost, getFrame: () => shownFrame };
+  window.hoki = { tap, state, getBoost: () => boost, getAngle: () => pawAngle };
 })();
