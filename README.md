@@ -70,7 +70,10 @@ Without installing: run `desktop/Hoki.cmd` from a checkout.
 powershell -ExecutionPolicy Bypass -File serve.ps1   # http://localhost:8080
 python tools/check_web.py                           # smoke test (Playwright + Edge)
 powershell -STA -File desktop/hoki-widget.ps1 -Snapshot out.png -SnapshotTaps 8   # render the widget offscreen
+powershell -STA -File tools/capture_hoki.ps1                                     # live-capture the on-screen widget -> docs/media/desktop-widget.png
 ```
+
+`tools/capture_hoki.ps1` grabs the widget as it is actually shown on your desktop (cat + wallpaper behind it) for the README hero. It waits for the desktop to unlock, starts the widget if it is not running, and only falls back to the offscreen `-Snapshot` render when there is no display.
 
 `python tools/make_icons.py` rebuilds `assets/icon.svg` and the PNG icons from `assets/cat.svg` (needs Playwright + Edge).
 The look (palette, type, motion, banned defaults) is written down in `design.md`.
