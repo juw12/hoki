@@ -86,10 +86,24 @@ function Get-IsLocked {
 }
 
 # --- capture helper (hidden child, waits, returns exit code) -----------------
+# The child's stdout/stderr are redirected to temp files and echoed into
+# watcher.log, so the -Publish result (pushed / unchanged / add|commit|push
+# failed) is visible even though the child runs hidden.
 function Invoke-Capture {
-  $arg = '-NoProfile -STA -ExecutionPolicy Bypass -WindowStyle Hidden -File "{0}" -Publish' -f $Capture
-  $proc = Start-Process powershell.exe -ArgumentList $arg -WindowStyle Hidden -Wait -PassThru
-  return $proc.ExitCode
+  $arg = '-NoProfile -STA -ExecutionPolicy Bypass -File "{0}" -Publish' -f $Capture
+  $capOut = Join-Path $env:TEMP ('hoki_cap_{0}.out' -f $PID)
+  $capErr = Join-Path $env:TEMP ('hoki_cap_{0}.err' -f $PID)
+  foreach ($f in @($capOut, $capErr)) { if (Test-Path $f) { Remove-Item $f -Force } }
+  $proc = Start-Process powershell.exe -ArgumentList $arg -NoNewWindow -Wait -PassThru `
+    -RedirectStandardOutput $capOut -RedirectStandardError $capErr
+  $code = $proc.ExitCode
+  foreach ($f in @($capOut, $capErr)) {
+    if (Test-Path $f) {
+      foreach ($line in (Get-Content $f)) { Write-Log ('    | ' + $line) }
+      Remove-Item $f -Force
+    }
+  }
+  return $code
 }
 
 Write-Log ('Hoki watcher started  capture={0}  poll={1}s  settle={2}s  min-interval={3}m' -f $Capture, $PollSeconds, $SettleSeconds, $MinCaptureIntervalMinutes)

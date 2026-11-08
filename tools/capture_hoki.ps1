@@ -159,6 +159,20 @@ function Test-BlankImage($bmp) {
     return ($total -gt 0 -and ($lit / $total) -lt 0.02)
 }
 
+# Read a PNG's pixel width/height straight from the IHDR chunk without loading
+# the image. (System.Drawing.Image::FromFile holds an exclusive lock on the file
+# until the .NET finalizer runs, which can block a later `git add` on Windows.)
+function Get-PngSize([string]$path) {
+    $fs = New-Object System.IO.FileStream($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    try {
+        $b = New-Object byte[] 24
+        [void]$fs.Read($b, 0, 24)
+        return @{ W = [BitConverter]::ToInt32($b, 16); H = [BitConverter]::ToInt32($b, 20) }
+    } finally {
+        $fs.Close()
+    }
+}
+
 # ---------- 1) wait for the desktop to be unlocked ----------
 $canLive = $true
 if (-not $NoWaitUnlock -and (Test-DesktopLocked)) {
@@ -208,10 +222,9 @@ if ($captured -ne 'live') {
 }
 
 # ---------- 5) report ----------
-$img = [System.Drawing.Image]::FromFile($Out)
+$size = Get-PngSize $Out
 Write-Host ('Hoki capture -> ' + $Out)
-Write-Host (('  mode={0}  {1}x{2}px  {3} bytes' -f $captured, $img.Width, $img.Height, (Get-Item $Out).Length))
-$img.Dispose()
+Write-Host (('  mode={0}  {1}x{2}px  {3} bytes' -f $captured, $size.W, $size.H, (Get-Item $Out).Length))
 
 # ---------- 6) optional: publish the refreshed hero to GitHub ----------
 # git writes its progress to stderr; this helper captures it without throwing
@@ -238,6 +251,13 @@ if ($Publish) {
             Write-Host '  publish: hero unchanged - nothing to publish'
         } else {
             $stamp  = (Get-Date -Format 'yyyy-MM-dd HH:mm')
+            # The Task Scheduler child may run in a minimal environment where git
+            # cannot find the global identity; fall back to the owner's so the
+            # commit still succeeds and is attributed correctly.
+            if (-not (Invoke-Git -C $root config user.email).Out) {
+                [void](Invoke-Git -C $root config user.name 'juwpegatron')
+                [void](Invoke-Git -C $root config user.email 'juwpegatron@gmail.com')
+            }
             $commit = Invoke-Git -C $root commit -m "Hoki hero: refresh live desktop-widget capture ($stamp)"
             if ($commit.Code -ne 0) {
                 Write-Warning ('publish: git commit failed: ' + $commit.Out)
