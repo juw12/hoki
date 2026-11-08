@@ -167,7 +167,10 @@ function Get-PngSize([string]$path) {
     try {
         $b = New-Object byte[] 24
         [void]$fs.Read($b, 0, 24)
-        return @{ W = [BitConverter]::ToInt32($b, 16); H = [BitConverter]::ToInt32($b, 20) }
+        # PNG IHDR width/height are big-endian 32-bit; read them in the right order.
+        $w = [BitConverter]::ToInt32([byte[]]@($b[19], $b[18], $b[17], $b[16]), 0)
+        $h = [BitConverter]::ToInt32([byte[]]@($b[23], $b[22], $b[21], $b[20]), 0)
+        return @{ W = $w; H = $h }
     } finally {
         $fs.Close()
     }
@@ -227,13 +230,34 @@ Write-Host ('Hoki capture -> ' + $Out)
 Write-Host (('  mode={0}  {1}x{2}px  {3} bytes' -f $captured, $size.W, $size.H, (Get-Item $Out).Length))
 
 # ---------- 6) optional: publish the refreshed hero to GitHub ----------
+# Resolve git to an absolute path. The Task Scheduler child runs with a reduced
+# PATH that does not include a per-user Git install (e.g. %LOCALAPPDATA%\Programs\
+# Git), so `git` is not on PATH there; fall back to the well-known install spots.
+function Find-GitExe {
+    $cmd = Get-Command git -ErrorAction SilentlyContinue
+    if ($cmd) { return $cmd.Source }
+    $candidates = @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\Git\cmd\git.exe'),
+        (Join-Path $env:ProgramFiles 'Git\cmd\git.exe'),
+        (Join-Path ${env:ProgramFiles(x86)} 'Git\cmd\git.exe'),
+        (Join-Path $env:ProgramFiles 'Git\bin\git.exe')
+    )
+    foreach ($c in $candidates) { if ($c -and (Test-Path $c)) { return $c } }
+    return $null
+}
+$script:GitExe = Find-GitExe
+
 # git writes its progress to stderr; this helper captures it without throwing
 # under $ErrorActionPreference = 'Stop', and returns the exit code + output.
 function Invoke-Git {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
+    if (-not $script:GitExe) {
+        [pscustomobject]@{ Code = 127; Out = 'git executable not found (checked PATH + common Git install locations)' }
+        return
+    }
     $prevEap = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    $out  = & git @GitArgs 2>&1
+    $out  = & $script:GitExe @GitArgs 2>&1
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prevEap
     [pscustomobject]@{ Code = $code; Out = (@($out) -join "`n") }
