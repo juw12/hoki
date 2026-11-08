@@ -60,11 +60,41 @@
     }
     return 'night';
   }
+  // One gentle fortune per local day, the same all day long (no network, no randomness per visit).
+  const FORTUNES = [
+    { zh: '大吉', en: 'Great luck. A good day to start something small.' },
+    { zh: '中吉', en: 'Good luck. Say yes to one kind invitation.' },
+    { zh: '小吉', en: 'A little luck. Tidy one corner; luck likes room.' },
+    { zh: '吉', en: 'Luck is near. Drink some water, wave back.' },
+    { zh: '末吉', en: 'Luck is on its way. Keep going, slowly.' },
+    { zh: '福', en: 'Blessings at home. Call someone you miss.' },
+    { zh: '财', en: 'Good for money. Spend on something that lasts.' },
+    { zh: '喜', en: 'A happy day. Share one good thing.' },
+  ];
+
+  function renderFortune() {
+    const now = new Date();
+    const dayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+    let hash = 0;
+    for (const ch of dayKey) {
+      hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+    }
+    const fortune = FORTUNES[hash % FORTUNES.length];
+    const seal = $('fortune-seal');
+    if (!seal) {
+      return;
+    }
+    seal.textContent = fortune.zh.slice(-1);
+    $('fortune-name').textContent = fortune.zh;
+    $('fortune-line').textContent = fortune.en;
+  }
+
   function applyTimeOfDay() {
     const forced = params.get('time');
     document.documentElement.dataset.time = forced || timeOfDay(new Date().getHours());
   }
   applyTimeOfDay();
+  renderFortune();
   setInterval(applyTimeOfDay, 60 * 1000);
 
   // ---------- state ----------
@@ -221,8 +251,12 @@
   function showToast(html) {
     toast.innerHTML = html;
     toast.classList.add('show');
+    hint.classList.add('away');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('show');
+      hint.classList.remove('away');
+    }, 2600);
   }
 
   // ---------- tap ----------
@@ -241,7 +275,9 @@
     const { x, y } = pawPoint();
     const milestone = MILESTONES.find((m) => m.at === state.today);
     const blessing = BLESSINGS[state.total % BLESSINGS.length];
-    floatText(`+1 ${blessing}`, x + (Math.random() - 0.5) * 30, y - 10);
+    const catWidth = catButton.getBoundingClientRect().width;
+    // Right of the raised paw, over the head: clear of the left lantern.
+    floatText(`+1 ${blessing}`, x + catWidth * 0.22 + (Math.random() - 0.5) * 24, y - 6);
     coins(x, y, milestone ? 18 : 3);
 
     hint.classList.add('quiet');

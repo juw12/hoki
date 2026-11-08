@@ -6,14 +6,14 @@
   <title>Hoki - tap the lucky cat for a luck boost</title>
   <meta name="description" content="A waving Chinese lucky cat (招财猫) for your home screen or desktop. Tap it for a luck boost. Offline, no account.">
   <meta name="theme-color" content="#f6f2eb" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#14110f" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#1a1512" media="(prefers-color-scheme: dark)">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hoki">
-  <link rel="stylesheet" href="css/style.css?v=2.0.2">
+  <link rel="stylesheet" href="css/style.css?v=2.2.1">
 </head>
 <body>
   <header class="top">
@@ -79,10 +79,12 @@
     <div class="glow" id="glow" aria-hidden="true"></div>
     <button id="cat" class="cat" type="button" aria-label="Tap the lucky cat for a luck boost" aria-describedby="hint"></button>
     <div class="fx" id="fx" aria-hidden="true"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </main>
 
-  <div class="side">
   <p class="hint" id="hint">Tap Hoki for a little luck</p>
+
+  <div class="side">
 
   <section class="card stats" aria-label="Your luck">
     <div class="today">
@@ -94,6 +96,14 @@
       <div class="bar" role="progressbar" aria-label="Luck boost" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="boost-bar"><span></span></div>
     </div>
     <p class="total">All time <b id="total">0</b><span class="dot" aria-hidden="true">·</span>next lucky number <b id="next">8</b></p>
+  </section>
+
+  <section class="card fortune" aria-label="Today's fortune">
+    <span class="fortune-seal" id="fortune-seal" lang="zh" aria-hidden="true">吉</span>
+    <div class="fortune-text">
+      <p class="fortune-title">Today's fortune <span class="fortune-name" id="fortune-name" lang="zh">吉</span></p>
+      <p class="fortune-line" id="fortune-line">Luck is near. Wave back.</p>
+    </div>
   </section>
 
   <footer class="foot">
@@ -111,8 +121,7 @@
   </footer>
   </div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript>Hoki needs JavaScript to wave.</noscript>
-  <script src="js/app.js?v=2.0.2" defer></script>
+  <script src="js/app.js?v=2.2.1" defer></script>
 </body>
 </html>

@@ -17,6 +17,21 @@ cat = (ASSETS / "cat.svg").read_text(encoding="utf-8")
 inner = re.sub(r"<!--.*?-->", "", cat, flags=re.S)
 inner = inner[inner.index("<g "):inner.rindex("</svg>")]
 
+# Small-size variant: whiskers, lash flicks, nose highlight and toe lines vanish into
+# noise at 180 px and below, so the icon keeps only the shapes that carry the silhouette.
+ICON_DROP = [
+    r'\s*<path d="M86\.5 93[^>]*/>',             # lash flicks
+    r'\s*<ellipse cx="118\.3"[^>]*/>',            # nose highlight
+    r'\s*<path d="M16[01] 1[01][04][^>]*/>',       # right whiskers
+    r'\s*<path d="M79 104[^>]*/>',                 # left whiskers
+    r'\s*<path d="M15[0-9.]+ 20[0-9.]+ Q[^>]*/>',  # lower paw toe lines
+    r'\s*<path d="M90 222[^>]*/>',                 # front paw toe lines
+]
+for pattern in ICON_DROP:
+    inner, count = re.subn(pattern, "", inner)
+    if count != 1:
+        raise SystemExit(f"icon detail pattern matched {count} times: {pattern}")
+
 icon = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">

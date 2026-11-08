@@ -28,6 +28,7 @@
 - The cat waves its paw all day.
 - **Tap it**: +1 luck (福 / 财 / 运 / 喜), a bell, coins, and a **luck boost**. Every tap makes the paw wave faster and the glow brighter. The boost fades by half every 6 seconds, so keep tapping.
 - **Lucky numbers** (8 发, 28, 88, 168 一路发, 288, 888, 1688, 8888) trigger a big bell and a blessing.
+- **Daily fortune**: one quiet 签 (大吉, 中吉, 福, 财 …) per day, the same all day, under the count.
 - Counts today and all time. Saved only on your device. No account, no ads, no tracking.
 
 Inspired by the "tap for merit" apps (电子木鱼) and by Sansa (산사), the same spark behind [Jeda](https://github.com/juw12/jeda).
