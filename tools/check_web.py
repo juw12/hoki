@@ -97,6 +97,9 @@ with sync_playwright() as p:
     page.click("#desktop-toggle")
     check(page.is_visible("#install-cmd"), "desktop widget instructions open")
     page.screenshot(path=str(OUT / "phone_desktop_panel.png"))
+    fgrade_phone = page.inner_text("#fortune-grade")
+    check("吉" in fgrade_phone, f"phone shows a daily 吉 fortune ({fgrade_phone!r})")
+    check(len(page.inner_text("#fortune-blessing").strip()) >= 10, "phone fortune has a blessing line")
     check(not errors, f"no console errors ({errors})")
 
     # Widget mode
@@ -114,6 +117,30 @@ with sync_playwright() as p:
     dpage.wait_for_selector("#hoki-paw")
     cat_box = dpage.locator("#cat").bounding_box()
     check(cat_box["y"] + cat_box["height"] <= 800, "cat fits a 1280x800 window")
+
+    # Daily fortune card in the right column.
+    f = dpage.evaluate("window.hoki.getFortune()")
+    check(isinstance(f, dict) and 0 <= f["index"] < f["count"], f"fortune index in range ({f['index']}/{f['count']})")
+    dom_grade = dpage.inner_text("#fortune-grade")
+    check(dom_grade == f["grade"] and "吉" in dom_grade, f"rendered 吉 grade matches state ({dom_grade!r})")
+    check(len(dpage.inner_text("#fortune-blessing").strip()) >= 10, "desktop fortune has a blessing line")
+    side_h = dpage.locator(".side").bounding_box()["height"]
+    stage_h = dpage.locator(".stage").bounding_box()["height"]
+    check(side_h >= 0.78 * stage_h, f"right column not under-filled (side {side_h:.0f}px vs scene {stage_h:.0f}px)")
+
+    # One per day: the same date gives the same fortune across a reload.
+    f_index_before = f["index"]
+    dpage.reload()
+    dpage.wait_for_selector("#hoki-paw")
+    check(dpage.evaluate("window.hoki.getFortune().index") == f_index_before, "same fortune survives a reload (one per day)")
+
+    # Test hook: ?fortune=n forces a specific slip.
+    dpage.goto(base + "?fortune=0")
+    dpage.wait_for_selector("#hoki-paw")
+    check(dpage.evaluate("window.hoki.getFortune().index") == 0, "?fortune=0 override selects slip 0")
+
+    dpage.goto(base)
+    dpage.wait_for_selector("#hoki-paw")
     dpage.screenshot(path=str(OUT / "desktop.png"))
 
     # Service worker + manifest

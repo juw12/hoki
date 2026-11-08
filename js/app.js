@@ -28,6 +28,33 @@
   ];
   const BLESSINGS = ['福', '财', '运', '喜'];
 
+  // Daily fortune: one slip per calendar day, chosen by the date so it stays the
+  // same all day and turns over at midnight. The 吉 grades lean auspicious, but not
+  // every day is 大吉 — "for fun, luck not guaranteed."
+  const FORTUNES = [
+    { grade: '中吉', en: 'Fair fortune', line: 'A steady day. What you started keeps its shape.' },
+    { grade: '小吉', en: 'Small fortune', line: 'Small luck is still luck. A short errand runs easier than planned.' },
+    { grade: '大吉', en: 'Great fortune', line: 'The door you kept glancing at opens on its own.' },
+    { grade: '中吉', en: 'Fair fortune', line: "Work runs in a straight line today. Don't fight it." },
+    { grade: '上吉', en: 'High fortune', line: 'Someone thinks of you at a good moment.' },
+    { grade: '小吉', en: 'Small fortune', line: 'Keep it simple today. Less, and it holds.' },
+    { grade: '大吉', en: 'Great fortune', line: 'Money moves the right way — a bill settled, a number up.' },
+    { grade: '中吉', en: 'Fair fortune', line: 'A long reply lands well. Say the kind thing first.' },
+    { grade: '上吉', en: 'High fortune', line: 'Focus comes early and stays. Do the hard thing before noon.' },
+    { grade: '小吉', en: 'Small fortune', line: 'Rest counts as progress today. So does one cup of tea.' },
+    { grade: '大吉', en: 'Great fortune', line: 'New beginnings favor you. Say yes to the first one.' },
+    { grade: '中吉', en: 'Fair fortune', line: 'An old plan works better than the new idea. Trust it.' },
+    { grade: '上吉', en: 'High fortune', line: 'Good news is on the way. Make a little room for it.' },
+    { grade: '小吉', en: 'Small fortune', line: 'A small win today, and it stacks. Take the 1% improvement.' },
+    { grade: '大吉', en: 'Great fortune', line: 'Everything you need is already in hand. Look closer.' },
+    { grade: '中吉', en: 'Fair fortune', line: 'An easy day. Bank the calm for the harder one.' },
+    { grade: '上吉', en: 'High fortune', line: 'Your effort is noticed. Let it be seen, once.' },
+    { grade: '小吉', en: 'Small fortune', line: 'One careful step beats ten rushed ones today.' },
+    { grade: '大吉', en: 'Great fortune', line: 'The luck of 8 rides with you — 88, 168, 888.' },
+    { grade: '中吉', en: 'Fair fortune', line: 'Patience pays. The answer arrives by afternoon.' },
+    { grade: '上吉', en: 'High fortune', line: "A good day to start what you've named but not begun." },
+  ];
+
   const $ = (id) => document.getElementById(id);
   const catButton = $('cat');
   const fxLayer = $('fx');
@@ -40,6 +67,10 @@
   const soundButton = $('sound');
   const toast = $('toast');
   const hint = $('hint');
+  const fortuneGradeEl = $('fortune-grade');
+  const fortuneGradeEnEl = $('fortune-grade-en');
+  const fortuneLineEl = $('fortune-blessing');
+  const fortuneDateEl = $('fortune-date');
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const params = new URLSearchParams(location.search);
@@ -65,7 +96,10 @@
     document.documentElement.dataset.time = forced || timeOfDay(new Date().getHours());
   }
   applyTimeOfDay();
-  setInterval(applyTimeOfDay, 60 * 1000);
+  setInterval(() => {
+    applyTimeOfDay();
+    renderFortune(); // turns the daily fortune over at midnight
+  }, 60 * 1000);
 
   // ---------- state ----------
   const todayKey = () => {
@@ -155,6 +189,31 @@
     boostPct.textContent = `${pct}%`;
     glow.style.opacity = String(0.15 + boost * 0.75);
     glow.style.transform = `translate(-50%, -50%) scale(${(0.92 + boost * 0.18).toFixed(3)})`;
+  }
+
+  // One slip per day: the same date always picks the same fortune.
+  let currentFortune = null;
+  function fortuneIndex(date) {
+    const y = date.getFullYear();
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+    return (y * 373 + m * 31 + d) % FORTUNES.length;
+  }
+
+  function renderFortune() {
+    const now = new Date();
+    const override = params.get('fortune');
+    const index = override !== null
+      ? ((((parseInt(override, 10) || 0) % FORTUNES.length) + FORTUNES.length) % FORTUNES.length)
+      : fortuneIndex(now);
+    const f = FORTUNES[index];
+    currentFortune = { ...f, index, date: todayKey(), count: FORTUNES.length };
+    fortuneGradeEl.textContent = f.grade;
+    fortuneGradeEnEl.textContent = f.en;
+    fortuneLineEl.textContent = f.line;
+    fortuneDateEl.textContent = now.toLocaleDateString(undefined, {
+      weekday: 'short', day: 'numeric', month: 'short',
+    });
   }
 
   // Wave -1..1 -> arm angle: +1 = paw up (first angle), -1 = paw folded forward (second angle).
@@ -332,6 +391,7 @@
   // ---------- boot ----------
   async function boot() {
     renderStats();
+    renderFortune();
     const response = await fetch('assets/cat.svg');
     catButton.innerHTML = await response.text();
     catSvg = catButton.querySelector('svg');
@@ -355,5 +415,5 @@
   }
 
   // Small hook for automated checks.
-  window.hoki = { tap, state, getBoost: () => boost, getAngle: () => pawAngle };
+  window.hoki = { tap, state, getBoost: () => boost, getAngle: () => pawAngle, getFortune: () => currentFortune };
 })();

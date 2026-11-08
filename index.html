@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hoki">
-  <link rel="stylesheet" href="css/style.css?v=2.0.2">
+  <link rel="stylesheet" href="css/style.css?v=2.0.3">
 </head>
 <body>
   <header class="top">
@@ -96,6 +96,19 @@
     <p class="total">All time <b id="total">0</b><span class="dot" aria-hidden="true">·</span>next lucky number <b id="next">8</b></p>
   </section>
 
+  <section class="card fortune" aria-label="Today's fortune">
+    <div class="fortune-top">
+      <span class="fortune-label">Today's fortune</span>
+      <span class="fortune-date" id="fortune-date">Today</span>
+    </div>
+    <div class="fortune-grade">
+      <span class="zh" id="fortune-grade" lang="zh">大吉</span>
+      <span class="en" id="fortune-grade-en">Great fortune</span>
+    </div>
+    <p class="fortune-blessing" id="fortune-blessing">The luck of the day is on your side.</p>
+    <p class="fortune-note">New fortune at midnight</p>
+  </section>
+
   <footer class="foot">
     <div class="actions">
       <button id="install" class="pill" type="button">Add to home screen</button>
@@ -113,6 +126,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript>Hoki needs JavaScript to wave.</noscript>
-  <script src="js/app.js?v=2.0.2" defer></script>
+  <script src="js/app.js?v=2.0.3" defer></script>
 </body>
 </html>

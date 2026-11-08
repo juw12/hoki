@@ -465,6 +465,77 @@ html {
   margin: 0 8px;
 }
 
+/* ---------- daily fortune card ---------- */
+
+.fortune {
+  margin-top: 14px;
+  padding: 16px 20px 14px;
+}
+
+.fortune-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.fortune-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.fortune-date {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fortune-grade {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.fortune-grade .zh {
+  font-family: var(--serif);
+  font-size: 2.4rem;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--red);
+}
+
+.fortune-grade .en {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gold-ink);
+}
+
+.fortune-blessing {
+  margin: 12px 0 0;
+  font-family: var(--serif);
+  font-size: 1.12rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.fortune-note {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .fortune-grade .zh {
+    color: #e8786a;
+  }
+}
+
 /* ---------- footer ---------- */
 
 .foot {
@@ -660,6 +731,7 @@ body.widget {
 body.widget .top,
 body.widget .hint,
 body.widget .stats,
+body.widget .fortune,
 body.widget .foot,
 body.widget .scene,
 body.widget .ground {
