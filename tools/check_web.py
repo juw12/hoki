@@ -121,6 +121,7 @@ with sync_playwright() as p:
     fortune_line = dpage.inner_text("#fortune-line").strip()
     check(fortune_name and len(fortune_line) > 10, f"daily fortune shows ({fortune_name}: {fortune_line})")
     check(dpage.is_visible("#fortune-share"), "fortune Share button visible on desktop")
+    check(dpage.get_attribute("#fortune-share-label", "aria-live") == "polite", "Share state (Copied/Shared) is announced to screen readers")
     share_text = dpage.evaluate("window.hoki.getShareText()")
     check(fortune_name in share_text and fortune_line in share_text, f"getShareText has the fortune ({share_text!r})")
     dpage.evaluate("() => { window.__shareData = null; navigator.share = (p) => { window.__shareData = p; return Promise.resolve(); }; navigator.canShare = () => true; }")
