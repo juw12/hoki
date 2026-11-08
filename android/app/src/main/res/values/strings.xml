@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hoki</string>
+    <string name="widget_name">Hoki lucky cat</string>
+    <string name="widget_description">A waving lucky cat. Tap it for a little luck.</string>
+    <string name="tap_hint">Tap for luck</string>
+    <string name="cat_description">Hoki the lucky cat waving</string>
+</resources>

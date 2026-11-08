@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://juw12.github.io/hoki/"><b>Try it live</b></a> ·
+  <a href="#phone-widget-android">Phone widget</a> ·
   <a href="#desktop-widget-windows">Desktop widget</a> ·
   <a href="https://github.com/juw12">More by juw12</a>
 </p>
@@ -19,6 +20,7 @@
   <a href="https://juw12.github.io/hoki/"><img src="https://img.shields.io/badge/demo-live-2ea44f" alt="Live demo"></a>
   <img src="https://img.shields.io/badge/Web_%28PWA%29-24292f" alt="Web (PWA)">
   <img src="https://img.shields.io/badge/Windows_widget-24292f" alt="Windows widget">
+  <img src="https://img.shields.io/badge/Android_widget-24292f" alt="Android widget">
   <img src="https://img.shields.io/badge/Offline-24292f" alt="Offline">
 </p>
 <!-- HERO:END -->
@@ -45,6 +47,19 @@ It opens full screen and works offline.
 > A live, animated, tappable widget *inside* the iOS/Android widget area needs a native app; the system widget APIs don't allow continuous animation. Hoki installs as a home-screen app instead.
 
 `?widget` gives a cat-only view with a transparent background, e.g. for a browser side panel or a live-wallpaper tool: <https://juw12.github.io/hoki/?widget>
+
+## Phone widget (Android)
+
+A real home-screen widget: the cat waves right on your home screen and a tap adds luck (with a little buzz; lucky numbers buzz longer).
+
+1. Download [hoki-widget.apk](https://github.com/juw12/hoki/releases/latest/download/hoki-widget.apk) on the phone and open it (allow your browser to install apps once).
+2. Long-press the home screen, choose **Widgets**, find **Hoki** and drag it out. Resize it as you like.
+
+Opening the Hoki app shows the full web app. The widget counts its own luck (stored on the phone); the web app keeps its count in the browser.
+
+How it works: Android widgets cannot run code to animate, so `tools/make_widget_frames.py` renders 16 frames of the same `assets/cat.svg` with the paw rotated along an eased wave, and a `ViewFlipper` plays them (85 ms per frame). The APK is built and published by GitHub Actions (`.github/workflows/android.yml`) on every change under `android/`. It is signed with a deliberately public key (`android/app/hoki-public.p12`) so updates install over each other; it is a sideloaded hobby app, not a Play Store listing.
+
+**iPhone:** Apple only allows home-screen widgets from App Store apps, so on iPhone use Share > *Add to Home Screen* (full-screen, offline).
 
 ## Desktop widget (Windows)
 

@@ -1,0 +1,49 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "io.github.juw12.hoki"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "io.github.juw12.hoki"
+        minSdk 26
+        targetSdk 34
+        versionCode 3
+        versionName "2.2.1"
+    }
+
+    // A fixed, intentionally public key: it is not a secret, it only keeps every build
+    // installable over the previous one (sideloaded hobby app, not a Play Store listing).
+    signingConfigs {
+        hoki {
+            storeFile file("hoki-public.p12")
+            storeType "pkcs12"
+            storePassword "hoki-public"
+            keyAlias "hoki"
+            keyPassword "hoki-public"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.hoki
+        }
+        debug {
+            signingConfig signingConfigs.hoki
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError true
+        checkReleaseBuilds true
+        disable "IconMissingDensityFolder", "IconLocation", "OldTargetApi", "GradleDependency", "AndroidGradlePluginVersion"
+    }
+}

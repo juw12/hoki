@@ -425,6 +425,13 @@
     installHelp.hidden = !installHelp.hidden;
   });
 
+  const phoneToggle = $('phone-toggle');
+  const phonePanel = $('phone');
+  phoneToggle.addEventListener('click', () => {
+    phonePanel.hidden = !phonePanel.hidden;
+    phoneToggle.setAttribute('aria-expanded', String(!phonePanel.hidden));
+  });
+
   const desktopToggle = $('desktop-toggle');
   const desktopPanel = $('desktop');
   desktopToggle.addEventListener('click', () => {

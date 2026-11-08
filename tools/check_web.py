@@ -96,6 +96,14 @@ with sync_playwright() as p:
 
     page.click("#desktop-toggle")
     check(page.is_visible("#install-cmd"), "desktop widget instructions open")
+
+    page.click("#phone-toggle")
+    apk_href = page.get_attribute("#apk-link", "href") or ""
+    check(
+        page.is_visible("#apk-link") and apk_href.endswith("/releases/latest/download/hoki-widget.apk"),
+        f"phone widget panel opens with the APK link ({apk_href})",
+    )
+    page.click("#phone-toggle")
     page.screenshot(path=str(OUT / "phone_desktop_panel.png"))
     check(not errors, f"no console errors ({errors})")
 

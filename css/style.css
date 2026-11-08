@@ -727,6 +727,13 @@ html {
   color: var(--gold-ink);
 }
 
+.pill.dl {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text);
+  text-decoration: none;
+}
+
 /* ---------- larger screens: scene left, luck right ---------- */
 
 .side {

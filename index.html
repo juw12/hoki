@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hoki">
-  <link rel="stylesheet" href="css/style.css?v=2.2.2">
+  <link rel="stylesheet" href="css/style.css?v=2.3.0">
 </head>
 <body>
   <header class="top">
@@ -113,6 +113,7 @@
     <div class="actions">
       <button id="install" class="pill" type="button">Add to home screen</button>
       <button id="desktop-toggle" class="pill" type="button" aria-expanded="false" aria-controls="desktop">Desktop widget</button>
+      <button id="phone-toggle" class="pill" type="button" aria-expanded="false" aria-controls="phone">Phone widget</button>
     </div>
     <div id="install-help" class="panel" hidden></div>
     <div id="desktop" class="panel" hidden>
@@ -120,11 +121,17 @@
       <div class="cmd"><code id="install-cmd">irm https://juw12.github.io/hoki/desktop/install.ps1 | iex</code><button id="copy" class="pill small" type="button">Copy</button></div>
       <p class="fine">Drag to move. Right-click for size, sound, always on top and start with Windows.</p>
     </div>
+    <div id="phone" class="panel" hidden>
+      <p><b>Android:</b> a real home-screen widget. The cat waves on your home screen and a tap adds luck.</p>
+      <p><a id="apk-link" class="pill small dl" href="https://github.com/juw12/hoki/releases/latest/download/hoki-widget.apk">Download hoki-widget.apk</a></p>
+      <p class="fine">Open the file to install (allow your browser to install apps once). Then long-press the home screen, choose Widgets, and drag Hoki out.</p>
+      <p><b>iPhone:</b> Apple only allows home-screen widgets from App Store apps. Use Share, then "Add to Home Screen" for a full-screen Hoki that works offline.</p>
+    </div>
     <p class="fine">For fun. Luck not guaranteed. Saved only on this device.</p>
   </footer>
   </div>
 
   <noscript>Hoki needs JavaScript to wave.</noscript>
-  <script src="js/app.js?v=2.2.2" defer></script>
+  <script src="js/app.js?v=2.3.0" defer></script>
 </body>
 </html>
