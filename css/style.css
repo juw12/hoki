@@ -14,7 +14,7 @@
   --red: #b7443a;
   --radius: 20px;
   --radius-sm: 14px;
-  --shadow: 0 1px 2px rgba(60, 45, 25, 0.05), 0 10px 30px rgba(60, 45, 25, 0.08);
+  --shadow: 0 1px 2px rgba(60, 45, 25, 0.06), 0 12px 32px rgba(60, 45, 25, 0.1);
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Noto Serif", "Noto Serif SC", "Songti SC", "SimSun", Georgia, serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   --ring: #e7dccb;
@@ -104,11 +104,16 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   padding: env(safe-area-inset-top) 16px calc(20px + env(safe-area-inset-bottom));
+  background: transparent;
+  overflow-x: hidden;
+}
+
+html {
+  /* The warm dawn glow lives on the root so it spans the full window at every width. */
   background:
     radial-gradient(ellipse 90% 42% at 50% -6%, rgba(232, 200, 120, 0.42), transparent 70%),
     var(--bg);
   background-attachment: fixed;
-  overflow-x: hidden;
 }
 
 :focus-visible {
@@ -143,38 +148,44 @@ body {
   letter-spacing: 0.12em;
 }
 
-.icon-btn {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
+.sound-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 0 12px;
   border: 1px solid var(--line);
-  border-radius: 50%;
+  border-radius: 999px;
   background: var(--surface);
   color: var(--text);
+  font: 500 0.88rem var(--sans);
   box-shadow: var(--shadow);
   cursor: pointer;
 }
 
-.icon-btn svg {
-  width: 22px;
-  height: 22px;
+.sound-btn svg {
+  width: 20px;
+  height: 20px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.6;
+  stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.icon-btn .mute-line {
+.sound-btn .mute {
   display: none;
 }
 
-.icon-btn[aria-pressed="false"] {
+.sound-btn[aria-pressed="false"] {
   color: var(--muted);
 }
 
-.icon-btn[aria-pressed="false"] .mute-line {
+.sound-btn[aria-pressed="false"] .wave {
+  display: none;
+}
+
+.sound-btn[aria-pressed="false"] .mute {
   display: inline;
 }
 
@@ -182,7 +193,8 @@ body {
 
 .stage {
   position: relative;
-  width: min(88vw, 380px);
+  /* Fits the phone height too: the stage shrinks before the stats card is pushed off screen. */
+  width: clamp(240px, min(88vw, calc((100svh - 350px) / 1.1)), 380px);
   aspect-ratio: 1 / 1.1;
   margin-top: 8px;
 }
@@ -293,11 +305,11 @@ body {
   position: absolute;
   transform: translate(-50%, -50%);
   font-family: var(--serif);
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--gold-ink);
   white-space: nowrap;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+  text-shadow: 0 0 6px #fffaf0, 0 0 2px #fffaf0, 0 1px 0 #fffaf0;
   animation: float-up 1.3s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
 }
 
@@ -519,7 +531,7 @@ body {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(18px + env(safe-area-inset-bottom));
+  top: calc(12px + env(safe-area-inset-top));
   z-index: 50;
   display: flex;
   align-items: center;
@@ -534,7 +546,7 @@ body {
   color: var(--text);
   font-size: 0.92rem;
   opacity: 0;
-  transform: translate(-50%, 16px);
+  transform: translate(-50%, -16px);
   transition: opacity 0.35s ease, transform 0.35s ease;
   pointer-events: none;
 }
@@ -568,15 +580,63 @@ body {
   }
 }
 
-/* ---------- larger screens ---------- */
+/* ---------- larger screens: scene left, luck right ---------- */
 
-@media (min-width: 720px) and (min-height: 700px) {
+.side {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (min-width: 900px) and (min-height: 560px) {
+  body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 64px;
+    justify-items: center;
+    align-items: center;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 40px 32px;
+  }
+
+  .top {
+    grid-column: 1 / -1;
+    max-width: none;
+    padding-top: 20px;
+  }
+
   .stage {
-    width: min(46vh, 400px);
+    justify-self: end;
+    width: min(42vw, calc((100vh - 140px) / 1.1), 480px);
+  }
+
+  .side {
+    justify-self: start;
+    align-items: flex-start;
+    max-width: 400px;
+  }
+
+  .hint {
+    margin: 0 0 4px;
+    font-size: 1.25rem;
+  }
+
+  .foot,
+  .actions {
+    text-align: left;
+    justify-content: flex-start;
   }
 }
 
 /* ---------- widget mode (?widget): only the cat ---------- */
+
+html:has(body.widget) {
+  background: transparent;
+}
 
 body.widget {
   background: transparent;

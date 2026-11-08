@@ -13,17 +13,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hoki">
-  <link rel="stylesheet" href="css/style.css?v=2.0.0">
+  <link rel="stylesheet" href="css/style.css?v=2.0.1">
 </head>
 <body>
   <header class="top">
     <h1 class="brand">Hoki <span lang="zh">招财猫</span></h1>
-    <button id="sound" class="icon-btn" type="button" aria-pressed="true" aria-label="Sound on">
+    <button id="sound" class="sound-btn" type="button" aria-pressed="true">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M12 3.5a1.2 1.2 0 0 1 1.2 1.2v.5a5.6 5.6 0 0 1 4.4 5.5v3.6l1.6 2.3a.8.8 0 0 1-.7 1.2H5.5a.8.8 0 0 1-.7-1.2l1.6-2.3v-3.6a5.6 5.6 0 0 1 4.4-5.5v-.5A1.2 1.2 0 0 1 12 3.5Z"/>
-        <path d="M9.8 19.2a2.3 2.3 0 0 0 4.4 0"/>
-        <path class="mute-line" d="M4 4l16 16"/>
+        <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z"/>
+        <path class="wave" d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/>
+        <path class="mute" d="M16 9.5l5 5M21 9.5l-5 5"/>
       </svg>
+      <span id="sound-label">Sound on</span>
     </button>
   </header>
 
@@ -80,6 +81,7 @@
     <div class="fx" id="fx" aria-hidden="true"></div>
   </main>
 
+  <div class="side">
   <p class="hint" id="hint">Tap Hoki for a little luck</p>
 
   <section class="card stats" aria-label="Your luck">
@@ -107,9 +109,10 @@
     </div>
     <p class="fine">For fun. Luck not guaranteed. Saved only on this device.</p>
   </footer>
+  </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript>Hoki needs JavaScript to wave.</noscript>
-  <script src="js/app.js?v=2.0.0" defer></script>
+  <script src="js/app.js?v=2.0.1" defer></script>
 </body>
 </html>

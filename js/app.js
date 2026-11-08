@@ -144,7 +144,7 @@
     todayEl.textContent = state.today.toLocaleString();
     totalEl.textContent = state.total.toLocaleString();
     nextEl.textContent = nextMilestone(state.today).toLocaleString();
-    soundButton.setAttribute('aria-label', state.sound ? 'Sound on' : 'Sound off');
+    $('sound-label').textContent = state.sound ? 'Sound on' : 'Sound off';
     soundButton.setAttribute('aria-pressed', String(state.sound));
   }
 
