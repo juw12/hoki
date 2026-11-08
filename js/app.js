@@ -335,6 +335,7 @@
     const w = el.offsetWidth;
     const h = el.offsetHeight;
     let rise = -1.5 * h; // lively, height-proportional (matches the old feel)
+    let driftX = 0;      // rightward drift so a paw floater reads as coming from the cat
 
     // Keep the floater in the clear air between the two lanterns so it can
     // never rise straight up through one. Measured from the live lantern boxes.
@@ -345,7 +346,15 @@
       const right = R.left - 8;
       if (right > left) {
         if (w <= right - left) {
-          x = Math.min(Math.max(x, left + w / 2), right - w / 2);
+          const target = Math.min(Math.max(x, left + w / 2), right - w / 2);
+          if (target > x) {
+            // Paw is in the left-lantern column: start at the paw and drift
+            // gently into the clear gap (see .float.drift / float-up-drift).
+            driftX = target - x;
+            el.classList.add('drift');
+          } else {
+            x = target;
+          }
         } else {
           // Too wide for the gap: centre it and fade before the lowest lantern
           // point so it still never touches a lantern.
@@ -359,6 +368,7 @@
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
     el.style.setProperty('--rise', `${rise.toFixed(1)}px`);
+    if (driftX > 0) el.style.setProperty('--drift-x', `${driftX.toFixed(1)}px`);
     el.addEventListener('animationend', () => el.remove());
   }
 

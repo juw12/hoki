@@ -337,6 +337,18 @@ html {
   100% { opacity: 0; transform: translate(-50%, -50%) translateY(var(--rise, -64px)) scale(1.04); }
 }
 
+/* A floater that starts at the paw (under the left lantern) drifts gently into
+   the clear gap as it rises, so it reads as coming from the cat yet never
+   passes through a lantern. The drift finishes by 40% - while the floater is
+   still well below the lantern band - so the rest of the rise is straight up
+   in clear air. */
+.float.drift { animation-name: float-up-drift; }
+@keyframes float-up-drift {
+  0%   { opacity: 0; transform: translate(-50%, -50%) translateY(10px) translateX(0) scale(0.9); }
+  40%  { opacity: 1; transform: translate(-50%, -50%) translateY(calc(var(--rise, -64px) * 0.4)) translateX(var(--drift-x, 0px)) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) translateY(var(--rise, -64px)) translateX(var(--drift-x, 0px)) scale(1.04); }
+}
+
 .coin {
   position: absolute;
   width: 14px;

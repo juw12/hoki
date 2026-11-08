@@ -15,8 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 
 def serve():
-    h = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(ROOT))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), h)
+    class QuietHandler(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, *a, **kw):
+            super().__init__(*a, directory=str(ROOT), **kw)
+        def log_message(self, *a):  # keep stderr clean so the exit code reads true
+            pass
+    httpd = socketserver.TCPServer(("127.0.0.1", 0), QuietHandler)
     port = httpd.server_address[1]
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     return port, httpd
