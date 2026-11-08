@@ -18,6 +18,7 @@ Options:
     -Widget <ps1>       the widget script (default: <repo>\desktop\hoki-widget.ps1)
     -NoWaitUnlock       do not wait for the desktop to unlock (when you know it is unlocked)
     -NoLaunch           do not start the widget if it is missing (snapshot fallback instead)
+    -Publish            after a LIVE capture, commit the refreshed docs image and push to origin main
     -UnlockTimeoutSec N max seconds to wait for an unlock (default 300)
     -WindowTimeoutSec N max seconds to wait for the widget window after launching (default 20)
     -SettleSeconds N    pause after the window appears so it is fully painted (default 2)
@@ -29,7 +30,8 @@ param(
     [int]$WindowTimeoutSec = 20,
     [int]$SettleSeconds = 2,
     [switch]$NoWaitUnlock,
-    [switch]$NoLaunch
+    [switch]$NoLaunch,
+    [switch]$Publish
 )
 
 $ErrorActionPreference = 'Stop'
@@ -210,3 +212,58 @@ $img = [System.Drawing.Image]::FromFile($Out)
 Write-Host ('Hoki capture -> ' + $Out)
 Write-Host (('  mode={0}  {1}x{2}px  {3} bytes' -f $captured, $img.Width, $img.Height, (Get-Item $Out).Length))
 $img.Dispose()
+
+# ---------- 6) optional: publish the refreshed hero to GitHub ----------
+# git writes its progress to stderr; this helper captures it without throwing
+# under $ErrorActionPreference = 'Stop', and returns the exit code + output.
+function Invoke-Git {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $out  = & git @GitArgs 2>&1
+    $code = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
+    [pscustomobject]@{ Code = $code; Out = (@($out) -join "`n") }
+}
+
+if ($Publish) {
+    if ($captured -ne 'live') {
+        Write-Host '  publish: skipped (only a live capture is published; this was an offscreen snapshot)'
+    } else {
+        $rel = 'docs/media/desktop-widget.png'
+        $add = Invoke-Git -C $root add $rel
+        if ($add.Code -ne 0) {
+            Write-Warning ('publish: git add failed: ' + $add.Out)
+        } elseif ((Invoke-Git -C $root diff --cached --quiet).Code -eq 0) {
+            Write-Host '  publish: hero unchanged - nothing to publish'
+        } else {
+            $stamp  = (Get-Date -Format 'yyyy-MM-dd HH:mm')
+            $commit = Invoke-Git -C $root commit -m "Hoki hero: refresh live desktop-widget capture ($stamp)"
+            if ($commit.Code -ne 0) {
+                Write-Warning ('publish: git commit failed: ' + $commit.Out)
+            } else {
+                $push = Invoke-Git -C $root push origin main
+                if ($push.Code -eq 0) {
+                    Write-Host '  publish: pushed the new hero to origin main (juw12/hoki)'
+                } else {
+                    # origin moved (a parallel session pushed first) -> rebase onto it, retry once
+                    Write-Host '  publish: push rejected (origin moved) - rebasing onto origin main ...'
+                    $rebase = Invoke-Git -C $root pull --rebase origin main
+                    if ($rebase.Code -ne 0) {
+                        Invoke-Git -C $root rebase --abort | Out-Null
+                        Write-Warning 'publish: could not auto-rebase (likely a hero conflict). Then: git pull --rebase origin main; git push origin main'
+                        $rebase.Out -split "`n" | ForEach-Object { Write-Host ('    ' + $_) }
+                    } else {
+                        $push2 = Invoke-Git -C $root push origin main
+                        if ($push2.Code -eq 0) {
+                            Write-Host '  publish: rebased onto origin and pushed the new hero (juw12/hoki)'
+                        } else {
+                            Write-Warning 'publish: hero committed locally, but push still failed. Run: git pull --rebase origin main; git push origin main'
+                            $push2.Out -split "`n" | ForEach-Object { Write-Host ('    ' + $_) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
