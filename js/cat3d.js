@@ -50,9 +50,9 @@ const BECKON = { wrist: 1.05, arm: 0.28 };
 function ceramic(options = {}) {
   return new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
-    roughness: 0.52,
-    clearcoat: 0.3,
-    clearcoatRoughness: 0.45,
+    roughness: 0.46,
+    clearcoat: 0.42,
+    clearcoatRoughness: 0.4,
     sheen: 0.35,
     sheenRoughness: 0.8,
     sheenColor: new THREE.Color('#fff0dc'),
@@ -248,6 +248,7 @@ function buildCat() {
   });
   const irisMaterial = new THREE.MeshPhysicalMaterial({ color: COLORS.iris, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.05 });
   const sparkle = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const whiskerInk = new THREE.MeshStandardMaterial({ color: '#8a6d5a', roughness: 0.6, transparent: true, opacity: 0.85 });
   const eyes = [];
   const happyEyes = [];
   for (const side of [-1, 1]) {
@@ -288,7 +289,7 @@ function buildCat() {
           return base;
         }),
       );
-      head.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 12, 0.016, 6, false), ink));
+      head.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 16, 0.011, 6, false), whiskerInk));
     }
   }
   // Whisker pads: two soft bumps under the nose, the way a real cat's muzzle sits.
@@ -341,6 +342,13 @@ function buildCat() {
   paintPatches(coinPaw.geometry, new THREE.Vector3(1, 0.82, 0.9), []);
   coinPaw.position.set(0.7, 1.22, 0.84);
   cat.add(coinPaw);
+  // Little pink toe beans on the coin paw, so it reads as a paw resting on the koban.
+  const beanMaterial = ceramic({ color: COLORS.pad, clearcoat: 0.4 });
+  for (const [x, y] of [[-0.09, 0.06], [0, 0.09], [0.09, 0.06]]) {
+    const bean = ellipsoid(0.042, [1, 1.1, 0.5], beanMaterial, 20);
+    bean.position.set(0.7 + x, 1.22 + y, 0.84 + 0.2);
+    cat.add(bean);
+  }
 
   // Feet peeking out at the front.
   for (const side of [-1, 1]) {
@@ -364,8 +372,9 @@ function buildCat() {
     [
       new THREE.Vector3(0.55, 0.25, -0.65),
       new THREE.Vector3(1.05, 0.28, -0.42),
-      new THREE.Vector3(1.32, 0.6, -0.05),
-      new THREE.Vector3(1.28, 1.02, 0.12),
+      new THREE.Vector3(1.36, 0.62, -0.08),
+      new THREE.Vector3(1.38, 1.12, 0.1),
+      new THREE.Vector3(1.24, 1.42, 0.2),
     ].map((point) => point.sub(tailRoot)),
   );
   const tailGeometry = new THREE.TubeGeometry(tailCurve, 48, 0.14, 20, false);
@@ -422,7 +431,7 @@ function buildCat() {
   return { cat, shoulder, wrist, pawTip, head, eyes, happyEyes, ears, tail };
 }
 
-// No cushion: Hoki sits on an invisible floor that only catches its shadow, plus a soft contact blob.
+// No cushion: Hoki sits on a soft contact shadow (a cast-shadow floor left a hard slab past the scene edge).
 function buildGround() {
   const group = new THREE.Group();
   const catcher = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), new THREE.ShadowMaterial({ opacity: 0.11 }));
@@ -447,7 +456,7 @@ function buildGround() {
   );
   blob.rotation.x = -Math.PI / 2;
   blob.position.set(0, SIZE.groundY + 0.004, 0.12);
-  group.add(catcher, blob);
+  group.add(blob);
   return group;
 }
 
@@ -520,7 +529,7 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
   const fill = new THREE.DirectionalLight(0xdfe8ff, 0.55);
   fill.position.set(4, 2.5, 3);
   scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xffe2b0, 1.1);
+  const rim = new THREE.DirectionalLight(0xffe2b0, 1.45);
   rim.position.set(1.5, 4, -5);
   scene.add(rim);
 

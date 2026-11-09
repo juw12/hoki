@@ -701,7 +701,7 @@ html {
 /* ---------- daily fortune ---------- */
 
 .fortune {
-  order: 1; /* phones: below the buttons, so the first screen stays the cat and the count */
+  order: 0; /* right after the luck card: today's count and today's fortune read together */
   margin-top: 10px;
   padding: 6px 20px;
   display: flex;
@@ -836,13 +836,13 @@ html {
     grid-column: 2;
     grid-row: 2;
     justify-self: start;
-    align-self: stretch; /* full stage height: stats meet the cat's top, footer anchors the lower right */
+    align-self: center; /* one composed column, centred on the cat scene */
     align-items: flex-start;
     max-width: 400px;
   }
 
   .foot {
-    margin-top: auto; /* sink the install footer to the column's bottom, filling the lower-right space */
+    margin-top: 26px; /* same rhythm as the cards above, no dead gap */
   }
 
   .hint {
