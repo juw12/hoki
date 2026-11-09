@@ -45,9 +45,9 @@ const BECKON = { wrist: 1.05, arm: 0.28 };
 function ceramic(options = {}) {
   return new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
-    roughness: 0.38,
-    clearcoat: 0.7,
-    clearcoatRoughness: 0.22,
+    roughness: 0.5,
+    clearcoat: 0.35,
+    clearcoatRoughness: 0.42,
     ...options,
   });
 }
@@ -224,7 +224,7 @@ function buildCat() {
     head.add(faceStroke(arcPoints(side * 0.44, 0.08, 0.17, 0.11, 0, Math.PI), 0.032, ink));
     for (const [dy, tilt] of [[-0.12, 0.06], [-0.22, -0.02]]) {
       const start = [side * 0.92, -0.14 + dy];
-      const end = [side * 1.32, -0.14 + dy + tilt];
+      const end = [side * 1.4, -0.14 + dy + tilt];
       const points = [start, [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2 + 0.015], end];
       const curve = new THREE.CatmullRomCurve3(
         points.map(([x, y], index) => {
@@ -236,7 +236,7 @@ function buildCat() {
           return base;
         }),
       );
-      head.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 12, 0.011, 6, false), ink));
+      head.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 12, 0.016, 6, false), ink));
     }
   }
   const nose = ellipsoid(0.085, [1.15, 0.75, 0.7], ceramic({ color: '#e8877f' }), 32);
@@ -446,7 +446,7 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
 
   // Warm key light from the upper left, a cool fill and a rim light so the glaze reads as round.
   scene.add(new THREE.HemisphereLight(0xffffff, 0xc9b8aa, 0.8));
-  const key = new THREE.DirectionalLight(0xfff2e2, 2.1);
+  const key = new THREE.DirectionalLight(0xfff2e2, 1.85);
   key.position.set(-3.5, 6, 5);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);

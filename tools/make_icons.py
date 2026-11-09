@@ -18,12 +18,14 @@ CAT_FRAME = ROOT / "desktop" / "frames" / "cat_00.png"
 
 # Embed a downscaled copy so assets/icon.svg (also the favicon) stays small.
 cat = Image.open(CAT_FRAME).convert("RGBA")
+# Crop to the figure's bounding box so the cat fills the icon and reads larger at 180 px.
+cat = cat.crop(cat.getbbox())
 cat = cat.resize((300, round(300 * cat.height / cat.width)), Image.LANCZOS)
 buffer = io.BytesIO()
 cat.save(buffer, format="PNG", optimize=True)
 cat_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
 
-CAT_W = 344
+CAT_W = 400
 CAT_H = round(CAT_W * cat.height / cat.width)
 icon = f"""<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
   <defs>
@@ -37,7 +39,7 @@ icon = f"""<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.or
   <circle cx="256" cy="232" r="186" fill="url(#sky)"/>
   <path d="M70 300 C130 268 190 270 256 288 C320 306 380 278 442 280 L442 330 C400 410 330 418 256 418 C170 418 110 400 70 330 Z" fill="#b9c7a5"/>
   <circle cx="256" cy="232" r="186" fill="none" stroke="#e7dccb" stroke-width="16"/>
-  <image x="{256 - CAT_W // 2}" y="{500 - CAT_H}" width="{CAT_W}" height="{CAT_H}" href="{cat_uri}"/>
+  <image x="{256 - CAT_W // 2}" y="{498 - CAT_H}" width="{CAT_W}" height="{CAT_H}" href="{cat_uri}"/>
 </svg>
 """
 (ASSETS / "icon.svg").write_text(icon, encoding="utf-8", newline="\n")
