@@ -160,16 +160,19 @@ with sync_playwright() as p:
             break
     focus = kpage.evaluate("""() => {
         const el = document.activeElement;
-        const mark = getComputedStyle(el, '::after');
+        const style = getComputedStyle(el);
         return {
             id: el.id,
-            outline: getComputedStyle(el).outlineStyle,
-            mark: mark.content !== 'none' && parseFloat(mark.width) > 60 && mark.backgroundColor !== 'rgba(0, 0, 0, 0)',
+            outline: style.outlineStyle,
+            // a visible gold contour that traces the cat (stacked drop-shadows on its SVG),
+            // plus a solid outline that Windows high-contrast mode can paint
+            mark: style.outlineStyle === 'solid' && parseFloat(style.outlineWidth) >= 3
+                && (getComputedStyle(el.querySelector('svg')).filter.match(/drop-shadow/g) || []).length >= 4,
         };
     }""")
     check(
         focus["id"] == "cat" and focus["outline"] not in ("none", "") and focus["mark"],
-        f"keyboard focus mark on the cat ({focus})",
+        f"keyboard focus ring around the cat ({focus})",
     )
     kpage.wait_for_timeout(300)
     kpage.screenshot(path=str(OUT / "desktop_dark_focus.png"))

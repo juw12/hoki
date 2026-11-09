@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hoki">
-  <link rel="stylesheet" href="css/style.css?v=2.3.2">
+  <link rel="stylesheet" href="css/style.css?v=2.4.0">
 </head>
 <body>
   <header class="top">
@@ -47,7 +47,12 @@
           <circle cx="48" cy="120" r="0.9"/><circle cx="180" cy="30" r="0.9"/>
         </g>
         <circle class="orb" cx="236" cy="96" r="22"/>
+        <g class="cloud">
+          <ellipse cx="94" cy="80" rx="24" ry="6.5"/><ellipse cx="104" cy="74" rx="13" ry="8"/><ellipse cx="86" cy="76" rx="10" ry="6"/>
+          <ellipse cx="176" cy="132" rx="17" ry="4.5"/><ellipse cx="183" cy="128" rx="9" ry="5.5"/>
+        </g>
         <path class="hill-far" d="M0 212 C40 186 76 180 112 196 C142 208 170 176 210 172 C246 168 280 188 320 198 L320 320 L0 320 Z"/>
+        <path class="hill-rim" d="M10 205 C44 187 76 183 110 196 M150 191 C172 178 196 172 224 173"/>
         <g class="temple">
           <rect x="237" y="181" width="38" height="31"/>
           <path d="M214 172 Q219 182 231 182 L281 182 Q293 182 298 172 Q284 177 270 170 L256 164 L242 170 Q228 177 214 172 Z"/>
@@ -57,7 +62,14 @@
           <circle cx="256" cy="134.5" r="2.2"/>
           <rect x="253.5" y="161" width="5" height="6" rx="1" class="temple-light"/>
           <rect x="253" y="192" width="6" height="20" class="temple-light"/>
+          <rect x="231" y="181.5" width="50" height="2" rx="1" class="temple-edge"/>
+          <rect x="240" y="158.6" width="32" height="1.6" rx="0.8" class="temple-edge"/>
+          <rect x="242" y="196" width="5" height="7" rx="1" class="temple-edge"/>
+          <rect x="265" y="196" width="5" height="7" rx="1" class="temple-edge"/>
         </g>
+        <path class="shrub" d="M220 216 C220 207 230 205 234 211 C237 206 245 208 244 216 Z M270 216 C270 208 279 205 283 211 C287 207 294 210 293 216 Z"/>
+        <path class="hill-mid" d="M0 228 C42 214 82 216 122 225 C154 232 192 223 232 215 C262 209 292 214 320 220 L320 320 L0 320 Z"/>
+        <path class="hill-rim" d="M14 223 C48 213 84 216 120 224 M196 221 C226 214 262 208 300 214"/>
         <path class="hill-near" d="M0 246 C48 228 98 230 150 242 C200 254 252 236 320 234 L320 320 L0 320 Z"/>
       </g>
       <circle cx="160" cy="160" r="146" class="gate-ring"/>
@@ -113,10 +125,11 @@
   </section>
 
   <footer class="foot">
-    <div class="actions">
-      <button id="install" class="pill" type="button">Add to home screen</button>
-      <button id="desktop-toggle" class="pill" type="button" aria-expanded="false" aria-controls="desktop">Desktop widget</button>
-      <button id="phone-toggle" class="pill" type="button" aria-expanded="false" aria-controls="phone">Phone widget</button>
+    <p class="get-label" id="get-label">Keep Hoki close</p>
+    <div class="actions" role="group" aria-labelledby="get-label">
+      <button id="install" class="pill" type="button" aria-label="Add to home screen">Home screen</button>
+      <button id="desktop-toggle" class="pill" type="button" aria-expanded="false" aria-controls="desktop" aria-label="Desktop widget">Desktop</button>
+      <button id="phone-toggle" class="pill" type="button" aria-expanded="false" aria-controls="phone" aria-label="Phone widget">Phone</button>
     </div>
     <div id="install-help" class="panel" hidden></div>
     <div id="desktop" class="panel" hidden>
@@ -135,6 +148,6 @@
   </div>
 
   <noscript>Hoki needs JavaScript to wave.</noscript>
-  <script src="js/app.js?v=2.3.2" defer></script>
+  <script src="js/app.js?v=2.4.0" defer></script>
 </body>
 </html>

@@ -368,7 +368,7 @@
       ringBell(true);
       const rect = catButton.getBoundingClientRect();
       // Above the head, so the celebration never covers the cat's face.
-      floatText(milestone.zh, rect.left + rect.width * 0.62, rect.top - rect.height * 0.02, true);
+      floatText(milestone.zh, rect.left + rect.width * 0.64, rect.top + rect.height * 0.2, true);
       showToast(`<b lang="zh">${milestone.zh}</b><span><strong>${milestone.at} today</strong><br>${milestone.en}</span>`);
       if (navigator.vibrate) {
         navigator.vibrate([30, 40, 30, 40, 60]);

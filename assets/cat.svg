@@ -25,6 +25,8 @@
     <path d="M199 179 C196 170 208 168 212 177 C214 183 214 189 212 194 C206 192 201 186 199 179 Z" fill="#e9a65f"/>
     <!-- Tail mid-tone transition (cream to calico) -->
     <path d="M204 185 C206 180 208 177 210 178 C212 181 212 186 211 190 C208 189 205 187 204 185 Z" fill="#eebc7a"/>
+    <!-- Tail highlight along the outer curve -->
+    <path d="M186 211 C200 210 210 200 209 186" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.65"/>
 
     <!-- Main body shape -->
     <path d="M120 116 C166 116 186 160 185 194 C184 220 160 230 120 230 C80 230 56 220 55 194 C54 160 74 116 120 116 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4"/>
@@ -108,6 +110,8 @@
     <ellipse cx="148" cy="190" rx="19" ry="23" fill="#e3b24e" stroke="#b98a32" stroke-width="2"/>
     <ellipse cx="148" cy="190" rx="14" ry="18" fill="none" stroke="#c99a3c" stroke-width="1.4"/>
     <ellipse cx="139.5" cy="180" rx="3" ry="6" fill="#f6dc9a" opacity="0.85"/>
+    <path d="M160 176 C168 188 167 204 154 211 C162 202 164 190 158 179 Z" fill="#c4902c" opacity="0.45"/>
+    <path d="M157 170 L158.3 173.4 L161.7 174.7 L158.3 176 L157 179.4 L155.7 176 L152.3 174.7 L155.7 173.4 Z" fill="#fff6d8" opacity="0.9"/>
     <text x="148" y="196" font-size="15" text-anchor="middle" fill="#8a6418" font-family="'Noto Serif SC', 'Songti SC', SimSun, serif" font-weight="700">福</text>
     <!-- Front paws (bottom of body, resting) -->
     <ellipse cx="94" cy="227" rx="15" ry="7.5" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.2"/>
@@ -117,34 +121,22 @@
 
   <!-- ======== PAWS (drawn last, on top) ======== -->
   <g id="hoki-paw">
-    <!-- Right paw gripping the koban: 3 toe bumps wrapping the coin's bottom-right edge -->
-    <path d="M158 206 C162 202 168 203 170 208 C172 213 168 218 163 219 C158 220 154 216 154 212 C154 209 156 207 158 206 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M150 212 C153 208 158 209 159 213 C160 217 157 221 153 221 C149 221 147 217 150 212 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M143 218 C146 215 150 216 151 219 C152 222 149 226 146 226 C143 226 141 223 143 218 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2" stroke-linejoin="round"/>
-    <!-- Right paw pad (palm visible) -->
-    <ellipse cx="156" cy="214" rx="5" ry="4" fill="#f3b4a6" opacity="0.7"/>
+    <!-- Right paw gripping the koban: one soft mitten with two toe lines, clear of the coin's face -->
+    <path d="M153 207 C158 203 166 204 168.5 209.5 C170.5 215 165.5 220 159.5 220 C153.5 220 150 216.5 151 212 C151.3 210 152 208.3 153 207 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M157 214 L158.2 218.6 M162 212.5 L163.3 217.6" fill="none" stroke="#7a5f4c" stroke-width="1.3" stroke-linecap="round" opacity="0.55"/>
+    <path d="M161.5 206 C164.5 206 166.8 208 167.3 211 C165.5 209 163.5 207.5 161.5 206 Z" fill="#ffffff" opacity="0.8"/>
     <!-- Right paw soft shadow on the coin -->
     <path d="M145 210 C150 206 158 204 164 206 C160 207 154 209 149 212 Z" fill="#d4a44a" opacity="0.35"/>
 
-    <!-- Left arm (raised, waving): 3-step shading for rounded feel -->
-    <!-- Arm base shape -->
-    <path d="M55.6 159 L30.1 94.8 A11 11 0 0 1 49.9 85.2 L84.4 145 A16 16 0 0 1 55.6 159 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4" stroke-linejoin="round"/>
-    <!-- Arm inner shadow (right edge, 5 steps for soft shading) -->
-    <path d="M74 138 L58 104 C62 100 66 100 70 103 L82 136 C80 142 76 142 74 138 Z" fill="#f5e9d6"/>
-    <path d="M76 136 L61 104 C64.5 100.5 68 100.5 71.5 103.5 L82.5 134 C81 139.5 77.5 140 76 136 Z" fill="#f3e6d4"/>
-    <path d="M78 134 L64 104 C67 101 70 101 73 104 L83 132 C82 137 79 138 78 134 Z" fill="#f1e4d1"/>
-    <path d="M79.5 132 L67 105 C69.5 102.5 72 102.5 74.5 105 L83 130 C82.5 134.5 80.5 135.5 79.5 132 Z" fill="#ead8c2"/>
-    <path d="M81 130 L70 106 C72 104 74 104 76 106 L83 128 C83 132 82 133 81 130 Z" fill="#e2ccb0"/>
-    <!-- Arm outer highlight (left edge) -->
-    <path d="M56 132 L38 98 C40 94 44 92 47 95 L62 128 C60 132 58 134 56 132 Z" fill="#ffffff" opacity="0.4"/>
-
-    <!-- Shoulder joint: smooth bridge between arm and body -->
-    <path d="M55 158 C52 154 52 150 54 146 C58 142 64 142 68 146 C72 150 72 156 68 160 C64 163 58 162 55 158 Z" fill="#fffaf2"/>
-    <!-- Shoulder shadow (inner fold) -->
-    <path d="M60 155 C62 152 65 151 67 153 C69 155 68 158 66 160 C63 161 60 160 60 158 Z" fill="#f1e4d1"/>
-
-    <!-- Hand shadow (bottom of shoulder, subtle) -->
-    <path d="M65 162 C68 165 72 166 76 165 C74 166 70 166 68 164 Z" fill="#f1e4d1"/>
+    <!-- Left arm (raised, waving, v2.4): a full shoulder root that tapers to a slim wrist, one soft shading crescent -->
+    <path d="M31 95 A10.5 10.5 0 0 1 50 86.5 C62 102 75.5 118 85 132.5 C90.5 141 88.5 156 78.5 160.5 C70.5 164 61.5 160 57.5 152 C48.5 133 40 114 31 95 Z" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4" stroke-linejoin="round"/>
+    <!-- Inner shading: a soft crescent along the edge that faces the body, widest at the shoulder -->
+    <path d="M50 91 C62 106 74.5 121 83.5 134.5 C87.5 141.5 86.5 151.5 80.5 156.5 C82.5 149 79.5 142 74.5 135 C66 121 57 106 50 91 Z" fill="#f2e6d4"/>
+    <path d="M55 100 C65 113 75.5 127 81.5 139 C84 145 83 151 79.5 155 C80 148 77.5 142 73.5 136 C67 125 61 113 55 100 Z" fill="#e9d8c0" opacity="0.85"/>
+    <!-- Outer highlight: light catching the upper edge of the forearm -->
+    <path d="M40 102 C46.5 114 53 127 59 140 C57.8 141.6 56 141.4 55 140 C49 128 43.5 116 37.8 104.5 Z" fill="#ffffff" opacity="0.75"/>
+    <!-- Shoulder fold where the arm meets the chest -->
+    <path d="M62 156.5 C67 161 74 162 80 158.5" fill="none" stroke="#7a5f4c" stroke-width="1.3" stroke-linecap="round" opacity="0.28"/>
 
     <!-- Open palm facing viewer -->
     <ellipse cx="38" cy="72" rx="19.5" ry="18.5" fill="#fffaf2" stroke="#7a5f4c" stroke-width="2.4"/>

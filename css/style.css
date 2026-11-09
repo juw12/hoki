@@ -19,13 +19,16 @@
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   --ring: #e7dccb;
   --halo: rgba(217, 164, 65, 0.16);
-  --sky-top: #9cc3e4;
-  --sky-mid: #dcebf3;
+  --sky-top: #b4cddd;
+  --sky-mid: #e4ece9;
   --sky-low: #f6efe0;
   --orb: #fff6d6;
-  --hill-far: #b9c7a5;
-  --hill-near: #8fa77f;
-  --temple: #6f7f63;
+  --hill-far: #c4cdb0;
+  --hill-mid: #adbb98;
+  --hill-near: #95a685;
+  --temple: #75816a;
+  --temple-edge: #9aa58c;
+  --cloud: rgba(255, 255, 255, 0.7);
   --temple-light: #ffcf7a;
   --star-opacity: 0;
   color-scheme: light;
@@ -39,6 +42,9 @@
   --hill-far: #a98f8a;
   --hill-near: #7d6f73;
   --temple: #5d5160;
+  --hill-mid: #957d80;
+  --temple-edge: #8a7a86;
+  --cloud: rgba(255, 228, 210, 0.55);
 }
 
 :root[data-time="dusk"] {
@@ -49,6 +55,9 @@
   --hill-far: #8b6470;
   --hill-near: #5e4a5c;
   --temple: #45374a;
+  --hill-mid: #755666;
+  --temple-edge: #6a5670;
+  --cloud: rgba(255, 210, 190, 0.35);
 }
 
 :root[data-time="night"] {
@@ -60,6 +69,9 @@
   --hill-near: #262d46;
   --temple: #1c2238;
   --star-opacity: 0.85;
+  --hill-mid: #2d3552;
+  --temple-edge: #2f3756;
+  --cloud: rgba(255, 255, 255, 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -75,6 +87,23 @@
     --halo: rgba(217, 164, 65, 0.12);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.4);
     color-scheme: dark;
+  }
+  .scene {
+    filter: brightness(0.92) saturate(0.9);
+  }
+  /* Dark mode by day: a quiet twilight inside the gate instead of a bright noon sky on a dark page. */
+  :root[data-time="day"] {
+    --sky-top: #2e3a55;
+    --sky-mid: #56627d;
+    --sky-low: #8a8790;
+    --orb: #efe6c8;
+    --hill-far: #4d5848;
+    --hill-mid: #414c3e;
+    --hill-near: #363f34;
+    --temple: #262c25;
+    --temple-edge: #3f4a3c;
+    --cloud: rgba(255, 255, 255, 0.12);
+    --star-opacity: 0.45;
   }
 }
 
@@ -129,21 +158,20 @@ html {
   outline-offset: 3px;
 }
 
-/* The cat gets a quiet gold mark under the cushion instead of a big ring around it. */
+/* Keyboard focus traces Hoki's own silhouette in gold (a ~3 px contour plus a soft glow), so the ring hugs the cat
+   instead of boxing the moon gate. The transparent outline stays for Windows high-contrast mode, where it turns solid. */
 .cat:focus-visible {
-  outline: 2px solid transparent; /* still shows in Windows high-contrast mode */
+  outline: 3px solid transparent;
+  outline-offset: 2px;
 }
 
-.cat:focus-visible::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -12px;
-  width: 44%;
-  height: 4px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: var(--gold);
+.cat:focus-visible > svg {
+  filter:
+    drop-shadow(1.5px 0 0 var(--gold))
+    drop-shadow(-1.5px 0 0 var(--gold))
+    drop-shadow(0 1.5px 0 var(--gold))
+    drop-shadow(0 -1.5px 0 var(--gold))
+    drop-shadow(0 0 10px rgba(217, 164, 65, 0.55));
 }
 
 /* ---------- header ---------- */
@@ -179,11 +207,12 @@ html {
   align-items: center;
   gap: 8px;
   padding: 0 14px 0 11px;
-  border: 1px solid var(--line);
+  /* Quiet chrome: no frame until hover, serif italic label like the other captions */
+  border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
   color: var(--muted);
-  font: 500 0.85rem var(--sans);
+  font: italic 400 0.95rem var(--serif);
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
@@ -224,7 +253,7 @@ html {
 .stage {
   position: relative;
   /* Fits the phone height too: the stage shrinks before the stats card is pushed off screen. */
-  width: clamp(240px, min(88vw, calc((100svh - 350px) / 1.1)), 380px);
+  width: clamp(240px, min(82vw, calc((100svh - 350px) / 1.1)), 380px);
   aspect-ratio: 1 / 1.1;
   margin-top: 8px;
 }
@@ -244,6 +273,11 @@ html {
 .scene .orb { fill: var(--orb); opacity: 0.95; }
 .scene .hill-far { fill: var(--hill-far); }
 .scene .hill-near { fill: var(--hill-near); }
+.scene .hill-mid { fill: var(--hill-mid); }
+.scene .hill-rim { fill: none; stroke: #ffffff; stroke-opacity: 0.28; stroke-width: 1.2; stroke-linecap: round; }
+.scene .cloud { fill: var(--cloud); }
+.scene .temple .temple-edge { fill: var(--temple-edge); }
+.scene .shrub { fill: var(--hill-near); }
 .scene .temple { fill: var(--temple); }
 .scene .temple .temple-light { fill: var(--temple-light); opacity: 0.85; }
 .scene .stars circle { fill: #fff; opacity: var(--star-opacity); }
@@ -255,7 +289,7 @@ html {
 }
 
 .lantern line { stroke: #6b5444; stroke-width: 1.2; }
-.lantern .paper { fill: #bb4a3f; }
+.lantern .paper { fill: #b6544a; }
 .lantern .cap { fill: #d9a441; }
 .lantern .rib { fill: none; stroke: #9e3830; stroke-width: 1; opacity: 0.7; }
 .lantern .tassel { stroke: #d9a441; stroke-width: 2.4; stroke-linecap: round; }
@@ -460,14 +494,16 @@ html {
 
 .today .label {
   margin-top: 4px;
-  font-size: 0.82rem;
+  font-family: var(--serif);
+  font-size: 0.92rem;
   color: var(--muted);
 }
 
 .boost-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
+  font-family: var(--serif);
+  font-size: 0.95rem;
   color: var(--muted);
   margin-bottom: 8px;
 }
@@ -498,12 +534,13 @@ html {
   margin: 8px 0 0;
   padding-top: 10px;
   border-top: 1px solid var(--line);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--muted);
 }
 
+/* Secondary stats stay secondary: today's count and the boost are the headline. */
 .total b {
-  color: var(--text);
+  color: var(--muted);
   font-weight: 600;
 }
 
@@ -516,8 +553,16 @@ html {
 .foot {
   width: 100%;
   max-width: 440px;
-  margin-top: 14px;
+  margin-top: 12px;
   text-align: center;
+}
+
+.get-label {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--muted);
 }
 
 .actions {
@@ -525,6 +570,13 @@ html {
   justify-content: center;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.actions .pill {
+  padding: 0 14px;
+  border-color: var(--line);
+  font-size: 0.8rem;
+  font-weight: 400;
 }
 
 .pill {
@@ -594,14 +646,14 @@ html {
   position: absolute;
   left: 50%;
   /* Under the cat, over the hint line: never across the lanterns or the header. */
-  top: calc(100% - 6px);
+  top: calc(100% - 14px);
   z-index: 50;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: max-content;
   max-width: min(92vw, 400px);
-  padding: 8px 18px 8px 14px;
+  padding: 5px 16px 5px 12px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -648,7 +700,7 @@ html {
 
 .fortune {
   order: 1; /* phones: below the buttons, so the first screen stays the cat and the count */
-  margin-top: 18px;
+  margin-top: 10px;
   padding: 6px 20px;
   display: flex;
   align-items: center;
@@ -662,13 +714,13 @@ html {
   flex: none;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   background: var(--red);
   color: #fff3df;
   font-family: var(--serif);
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
   box-shadow: inset 0 0 0 3px rgba(255, 243, 223, 0.35);
@@ -676,9 +728,9 @@ html {
 
 .fortune-title {
   margin: 0;
-  font-size: 0.76rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 0.9rem;
   color: var(--muted);
 }
 
@@ -692,7 +744,8 @@ html {
 }
 
 .fortune-line {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
+  text-wrap: pretty;
   font-family: var(--serif);
   font-size: 0.98rem;
   line-height: 1.35;
@@ -781,7 +834,7 @@ html {
     grid-column: 2;
     grid-row: 2;
     justify-self: start;
-    align-self: start;
+    align-self: center;
     align-items: flex-start;
     max-width: 400px;
   }
@@ -792,7 +845,7 @@ html {
     justify-self: end;
     align-self: start;
     width: min(42vw, calc((100vh - 140px) / 1.1), 480px);
-    margin: 8px 0 0;
+    margin: -16px 0 0; /* tuck under the cushion: the grid gap alone left the hint floating */
     text-align: center;
     font-size: 1.2rem;
   }
