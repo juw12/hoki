@@ -243,6 +243,9 @@
   let wrist = [0, 0];
   let beckon = [0.12, 0.38];
   let pawFold = 0;
+  let cat3d = null;           // the 3D ceramic cat (js/cat3d.js); null -> SVG fallback
+  let catReady = false;
+  const fixedPose = params.has('pose') ? Math.min(1, Math.max(0, Number(params.get('pose')) || 0)) : null;
   let catSvg = null;
   let boost = 0;
   let phase = 0;
@@ -294,8 +297,20 @@
     hand.setAttribute('transform', `matrix(${handMatrix.map((v) => v.toFixed(3)).join(' ')})`);
   }
 
+  // Slow GPUs (old phones, software WebGL) get a lighter render, then a frame-rate cap that keeps
+  // the main thread at least half idle so taps stay responsive.
+  let renderCost = 0;
+  let renderFrames = 0;
+  let lightened = false;
+  function scheduleFrame() {
+    if (cat3d && renderCost > 25) {
+      setTimeout(() => requestAnimationFrame(frame), renderCost);
+    } else {
+      requestAnimationFrame(frame);
+    }
+  }
+
   function frame(now) {
-    requestAnimationFrame(frame);
     const dt = Math.min(0.1, (now - lastFrame) / 1000);
     lastFrame = now;
     boost *= Math.pow(0.5, dt / BOOST_HALF_LIFE_SEC);
@@ -304,12 +319,30 @@
     }
     const speed = reducedMotion ? 0.35 : BASE_WAVES_PER_SEC + boost * MAX_EXTRA_WAVES_PER_SEC;
     phase += dt * speed * Math.PI * 2;
-    setPaw(Math.sin(phase));
+    const wave = fixedPose === null ? Math.sin(phase) : 1 - fixedPose * 2;
+    if (cat3d) {
+      pawFold = (1 - wave) / 2;
+      const start = performance.now();
+      cat3d.update(pawFold, fixedPose === null ? dt : 0);
+      renderCost = renderCost * 0.85 + (performance.now() - start) * 0.15;
+      renderFrames += 1;
+      if (!lightened && renderFrames > 20 && renderCost > 30) {
+        lightened = true;
+        cat3d.lighten();
+      }
+      catReady = true;
+    } else {
+      setPaw(wave);
+    }
     renderBoost();
+    scheduleFrame();
   }
 
   // ---------- effects ----------
   function pawPoint() {
+    if (cat3d) {
+      return cat3d.pawPoint();
+    }
     const r = (catSvg || catButton).getBoundingClientRect();
     if (!catSvg) {
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
@@ -379,6 +412,9 @@
 
     hint.classList.add('quiet');
     catButton.classList.add('bump');
+    if (cat3d) {
+      cat3d.hop();
+    }
     setTimeout(() => catButton.classList.remove('bump'), 90);
 
     if (milestone) {
@@ -470,8 +506,35 @@
   });
 
   // ---------- boot ----------
+  // The cat is a real 3D ceramic figure when WebGL is available; the flat SVG is the fallback.
+  async function startCat3D() {
+    if (params.has('flat')) {
+      return false;
+    }
+    try {
+      const { createCat3D } = await import('./cat3d.js');
+      cat3d = createCat3D(catButton, { sway: !reducedMotion && fixedPose === null });
+      catButton.classList.add('is-3d');
+      return true;
+    } catch (error) {
+      cat3d = null;
+      return false;
+    }
+  }
+
+  function startLoop() {
+    requestAnimationFrame((now) => {
+      lastFrame = now;
+      frame(now);
+    });
+  }
+
   async function boot() {
     renderStats();
+    if (await startCat3D()) {
+      startLoop();
+      return;
+    }
     const response = await fetch('assets/cat.svg');
     catButton.innerHTML = await response.text();
     catSvg = catButton.querySelector('svg');
@@ -484,10 +547,8 @@
     hand = catSvg.querySelector('#hoki-hand');
     wrist = (catSvg.dataset.wrist || '38 90').split(' ').map(Number);
     beckon = (catSvg.dataset.beckon || '0.12 0.38').split(' ').map(Number);
-    requestAnimationFrame((now) => {
-      lastFrame = now;
-      frame(now);
-    });
+    catReady = true;
+    startLoop();
   }
 
   boot();
@@ -497,5 +558,13 @@
   }
 
   // Small hook for automated checks.
-  window.hoki = { tap, state, getBoost: () => boost, getFold: () => pawFold, getFortune: () => currentFortune, getShareText: fortuneShareText };
+  window.hoki = {
+    tap,
+    state,
+    getBoost: () => boost,
+    getFold: () => pawFold,
+    getRenderer: () => (cat3d ? '3d' : 'svg'),
+    isReady: () => catReady,
+    getPose: () => (cat3d ? cat3d.pose() : null),
+    getFortune: () => currentFortune, getShareText: fortuneShareText };
 })();

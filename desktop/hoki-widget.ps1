@@ -3,7 +3,7 @@ Hoki desktop widget: a waving lucky cat that sits on your Windows desktop.
 Click it for a luck boost. Drag to move. Right-click for options.
 
 Run:  powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File hoki-widget.ps1
-Needs cat.svg next to this file (or in ..\assets\). No install, no admin.
+Needs the frames folder next to this file (or ..\desktop\frames). No install, no admin.
 
 -Snapshot <png> renders one frame to a PNG and exits (used for automated checks;
 it does not read or write your saved luck).
@@ -99,109 +99,39 @@ if (-not $Snapshot) {
     }
 }
 
-# ---------- draw cat.svg with WPF shapes ----------
-$svgPath = @(
-    (Join-Path $PSScriptRoot 'cat.svg'),
-    (Join-Path $PSScriptRoot '..\assets\cat.svg')
-) | Where-Object { Test-Path $_ } | Select-Object -First 1
-if (-not $svgPath) {
-    throw 'cat.svg not found next to hoki-widget.ps1'
+# ---------- the 3D cat: pre-rendered frames of the web app's three.js model ----------
+# tools/make_widget_frames.py renders desktop\frames\cat_00.png (paw raised) ... cat_12.png (folded
+# toward the viewer) plus frames.json; the widget shows the frame for the current beckon fold.
+$framesDir = @(
+    (Join-Path $PSScriptRoot 'frames'),
+    (Join-Path $PSScriptRoot '..\desktop\frames')
+) | Where-Object { Test-Path (Join-Path $_ 'frames.json') } | Select-Object -First 1
+if (-not $framesDir) {
+    throw 'frames\frames.json not found next to hoki-widget.ps1 (run install.ps1 again)'
 }
-$svg = New-Object Xml.XmlDocument
-$svg.Load((Resolve-Path $svgPath).Path)
-$viewBox = $svg.DocumentElement.GetAttribute('viewBox').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
-$vbX = $viewBox[0]
-$vbY = $viewBox[1]
-$vbW = $viewBox[2]
-$vbH = $viewBox[3]
-$svgRoot = $svg.DocumentElement
-$pawPoint = $svgRoot.GetAttribute('data-paw').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
-$counterBox = $svgRoot.GetAttribute('data-counter').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
-$pivot = $svgRoot.GetAttribute('data-pivot').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
-$wrist = $svgRoot.GetAttribute('data-wrist').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
-$beckon = $svgRoot.GetAttribute('data-beckon').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
+$frameInfo = Get-Content (Join-Path $framesDir 'frames.json') -Raw | ConvertFrom-Json
+$vbW = [double]$frameInfo.width
+$vbH = [double]$frameInfo.height
+$frameImages = @()
+for ($i = 0; $i -lt $frameInfo.folds.Count; $i++) {
+    $bitmap = New-Object Windows.Media.Imaging.BitmapImage
+    $bitmap.BeginInit()
+    $bitmap.CacheOption = 'OnLoad'
+    $bitmap.UriSource = New-Object Uri((Join-Path $framesDir ('cat_{0:D2}.png' -f $i)))
+    $bitmap.EndInit()
+    $bitmap.Freeze()
+    $frameImages += $bitmap
+}
+$FrameMax = $frameImages.Count - 1
+$script:frameIndex = 0
+$pawPoint = @([double]$frameInfo.paw[0][0], [double]$frameInfo.paw[0][1])
 
 $BrushConverter = New-Object Windows.Media.BrushConverter
-
-function Get-Num($element, [string]$name, [double]$default = 0) {
-    $raw = $element.GetAttribute($name)
-    if ([string]::IsNullOrEmpty($raw)) {
-        return $default
-    }
-    return [double]::Parse($raw, $Culture)
-}
-
-function New-ArtShape($element) {
-    $geometry = $null
-    switch ($element.LocalName) {
-        'path' {
-            $geometry = [Windows.Media.Geometry]::Parse($element.GetAttribute('d'))
-        }
-        'circle' {
-            $r = Get-Num $element 'r'
-            $center = New-Object Windows.Point((Get-Num $element 'cx'), (Get-Num $element 'cy'))
-            $geometry = New-Object Windows.Media.EllipseGeometry($center, $r, $r)
-        }
-        'ellipse' {
-            $center = New-Object Windows.Point((Get-Num $element 'cx'), (Get-Num $element 'cy'))
-            $geometry = New-Object Windows.Media.EllipseGeometry($center, (Get-Num $element 'rx'), (Get-Num $element 'ry'))
-        }
-        'text' {
-            $family = New-Object Windows.Media.FontFamily('Microsoft YaHei UI, Microsoft YaHei, SimHei')
-            $typeface = New-Object Windows.Media.Typeface(
-                $family,
-                [Windows.FontStyles]::Normal,
-                [Windows.FontWeights]::Bold,
-                [Windows.FontStretches]::Normal
-            )
-            $formatted = New-Object Windows.Media.FormattedText(
-                $element.InnerText,
-                $Culture,
-                [Windows.FlowDirection]::LeftToRight,
-                $typeface,
-                (Get-Num $element 'font-size' 16),
-                [Windows.Media.Brushes]::Black,
-                1.0
-            )
-            $x = Get-Num $element 'x'
-            if ($element.GetAttribute('text-anchor') -eq 'middle') {
-                $x -= $formatted.Width / 2
-            }
-            $origin = New-Object Windows.Point($x, ((Get-Num $element 'y') - $formatted.Baseline))
-            $geometry = $formatted.BuildGeometry($origin)
-        }
-        default {
-            return $null
-        }
-    }
-
-    $shape = New-Object Windows.Shapes.Path
-    $shape.Data = $geometry
-    $fill = $element.GetAttribute('fill')
-    if ($fill -and $fill -ne 'none') {
-        $shape.Fill = $BrushConverter.ConvertFromString($fill)
-    }
-    $stroke = $element.GetAttribute('stroke')
-    if ($stroke -and $stroke -ne 'none') {
-        $shape.Stroke = $BrushConverter.ConvertFromString($stroke)
-        $shape.StrokeThickness = Get-Num $element 'stroke-width' 1
-    }
-    if ($element.GetAttribute('stroke-linecap') -eq 'round') {
-        $shape.StrokeStartLineCap = 'Round'
-        $shape.StrokeEndLineCap = 'Round'
-    }
-    if ($element.GetAttribute('stroke-linejoin') -eq 'round') {
-        $shape.StrokeLineJoin = 'Round'
-    }
-    $shape.Opacity = Get-Num $element 'opacity' 1
-    return $shape
-}
 
 $art = New-Object Windows.Controls.Canvas
 $art.Width = $vbW
 $art.Height = $vbH
 $scene = New-Object Windows.Controls.Canvas
-$scene.RenderTransform = New-Object Windows.Media.TranslateTransform(-$vbX, -$vbY)
 [void]$art.Children.Add($scene)
 
 # Gold glow behind the cat; brightens with the boost.
@@ -218,62 +148,39 @@ $glow.IsHitTestVisible = $false
 [Windows.Controls.Canvas]::SetTop($glow, 20)
 [void]$scene.Children.Add($glow)
 
-$pawLayer = $null
-$handLayer = $null
-foreach ($group in $svg.DocumentElement.ChildNodes) {
-    if ($group.LocalName -ne 'g') {
-        continue
-    }
-    $layer = New-Object Windows.Controls.Canvas
-    foreach ($element in $group.ChildNodes) {
-        if ($element.NodeType -ne [Xml.XmlNodeType]::Element) {
-            continue
-        }
-        $shape = New-ArtShape $element
-        if ($shape) {
-            [void]$layer.Children.Add($shape)
-        }
-    }
-    # The paw beckons front-to-back like the web app: the forearm foreshortens from the shoulder
-    # and the hand folds toward the viewer at the wrist (two matrices, see Set-PawWave).
-    if ($group.GetAttribute('id') -eq 'hoki-paw') {
-        $pawLayer = $layer
-        $pawLayer.RenderTransform = New-Object Windows.Media.MatrixTransform
-    }
-    if ($group.GetAttribute('id') -eq 'hoki-hand') {
-        $handLayer = $layer
-        $handLayer.RenderTransform = New-Object Windows.Media.MatrixTransform
-    }
-    [void]$scene.Children.Add($layer)
-}
-# Same mapping as js/app.js beckonMatrices: wave +1 = paw raised, -1 = folded toward the viewer.
+$catImage = New-Object Windows.Controls.Image
+$catImage.Width = $vbW
+$catImage.Height = $vbH
+$catImage.Stretch = 'Fill'
+[Windows.Media.RenderOptions]::SetBitmapScalingMode($catImage, 'HighQuality')
+$catImage.Source = $frameImages[0]
+[void]$scene.Children.Add($catImage)
+
+# Same mapping as js/app.js: wave +1 = paw raised, -1 = folded toward the viewer (front-to-back beckon).
 function Set-PawWave([double]$wave) {
-    if ($null -eq $pawLayer -or $null -eq $handLayer) {
-        return
-    }
     $fold = (1 - $wave) / 2
-    $armScale = 1 - $beckon[0] * $fold
-    $handScale = 1 - $beckon[1] * $fold
-    $handWiden = 1 + 0.05 * $fold
-    $lift = $pivot[1] * (1 - $armScale)
-    $pawLayer.RenderTransform.Matrix = New-Object Windows.Media.Matrix(1, 0, 0, $armScale, 0, $lift)
-    $handLayer.RenderTransform.Matrix = New-Object Windows.Media.Matrix(
-        $handWiden, 0, 0, ($armScale * $handScale),
-        ($wrist[0] * (1 - $handWiden)), ($armScale * $wrist[1] * (1 - $handScale) + $lift))
+    $index = [int][Math]::Round($fold * $FrameMax)
+    $index = [Math]::Max(0, [Math]::Min($FrameMax, $index))
+    if ($index -ne $script:frameIndex) {
+        $script:frameIndex = $index
+        $catImage.Source = $frameImages[$index]
+    }
 }
 Set-PawWave 1
 
-# Today's count, written on the red cushion.
+# Today's count, written along the front of the red cushion (the cushion is seen at 3/4, so tilt it).
 $counter = New-Object Windows.Controls.TextBlock
-$counter.Width = $counterBox[2]
+$counter.Width = 110
 $counter.TextAlignment = 'Center'
 $counter.FontFamily = New-Object Windows.Media.FontFamily('Palatino Linotype, Georgia, Microsoft YaHei UI')
 $counter.FontWeight = 'SemiBold'
-$counter.FontSize = 15
+$counter.FontSize = 13
 $counter.Foreground = $BrushConverter.ConvertFromString('#fff3df')
 $counter.IsHitTestVisible = $false
-[Windows.Controls.Canvas]::SetLeft($counter, $counterBox[0])
-[Windows.Controls.Canvas]::SetTop($counter, $counterBox[1])
+$counter.RenderTransformOrigin = New-Object Windows.Point(0.5, 0.5)
+$counter.RenderTransform = New-Object Windows.Media.RotateTransform(-8.5)
+[Windows.Controls.Canvas]::SetLeft($counter, 64)
+[Windows.Controls.Canvas]::SetTop($counter, 229)
 [void]$scene.Children.Add($counter)
 
 # Floating "+1" layer.
@@ -420,7 +327,8 @@ function Invoke-Tap {
     Update-Counter
 
     $blessing = $Blessings[$state.total % $Blessings.Count]
-    Show-Float "+1 $blessing" ($pawPoint[0] + (Get-Random -Minimum -12 -Maximum 12)) ($pawPoint[1] - 12) 22
+    $paw = $frameInfo.paw[$script:frameIndex]
+    Show-Float "+1 $blessing" ([double]$paw[0] + (Get-Random -Minimum -12 -Maximum 12)) ([double]$paw[1] - 18) 22
     if ($Milestones -contains $state.today) {
         $script:boost = 1.0
         Show-Float "$($state.today) $Fa!" 150 14 34

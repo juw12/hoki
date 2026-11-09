@@ -1,38 +1,31 @@
-"""Build assets/icon.svg from assets/cat.svg, then render the PNG icons with Edge (Playwright).
+"""Build assets/icon.svg and the PNG icons from the real 3D cat.
 
-Run from the repo root:  python tools/make_icons.py
-The icon is the cat inside a small moon gate on warm paper, matching the app.
+Run from the repo root after tools/make_widget_frames.py (it renders desktop/frames/cat_00.png,
+the 3D cat with its paw raised):  python tools/make_icons.py   (needs Pillow, Playwright + Edge)
+The icon is the 3D cat in a small moon gate on warm paper, matching the app.
 """
+import base64
+import io
 import os
-import re
 from pathlib import Path
 
+from PIL import Image
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
+CAT_FRAME = ROOT / "desktop" / "frames" / "cat_00.png"
 
-cat = (ASSETS / "cat.svg").read_text(encoding="utf-8")
-# Keep only the drawing (the <g> layers), dropping the outer <svg> and comments.
-inner = re.sub(r"<!--.*?-->", "", cat, flags=re.S)
-inner = inner[inner.index("<g "):inner.rindex("</svg>")]
+# Embed a downscaled copy so assets/icon.svg (also the favicon) stays small.
+cat = Image.open(CAT_FRAME).convert("RGBA")
+cat = cat.resize((300, round(300 * cat.height / cat.width)), Image.LANCZOS)
+buffer = io.BytesIO()
+cat.save(buffer, format="PNG", optimize=True)
+cat_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
 
-# Small-size variant: whiskers, lash flicks, nose highlight and toe lines vanish into
-# noise at 180 px and below, so the icon keeps only the shapes that carry the silhouette.
-ICON_DROP = [
-    r'\s*<path d="M86\.5 93[^>]*/>',             # lash flicks
-    r'\s*<ellipse cx="118\.3"[^>]*/>',            # nose highlight
-    r'\s*<path d="M16[01] 1[01][04][^>]*/>',       # right whiskers
-    r'\s*<path d="M79 104[^>]*/>',                 # left whiskers
-    r'\s*<path d="M15[0-9.]+ 20[0-9.]+ Q[^>]*/>',  # lower paw toe lines
-    r'\s*<path d="M90 222[^>]*/>',                 # front paw toe lines
-]
-for pattern in ICON_DROP:
-    inner, count = re.subn(pattern, "", inner)
-    if count == 0:
-        print("icon detail not found (cat redrawn?):", pattern)
-
-icon = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+CAT_W = 344
+CAT_H = round(CAT_W * cat.height / cat.width)
+icon = f"""<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#9cc3e4"/>
@@ -44,8 +37,7 @@ icon = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <circle cx="256" cy="232" r="186" fill="url(#sky)"/>
   <path d="M70 300 C130 268 190 270 256 288 C320 306 380 278 442 280 L442 330 C400 410 330 418 256 418 C170 418 110 400 70 330 Z" fill="#b9c7a5"/>
   <circle cx="256" cy="232" r="186" fill="none" stroke="#e7dccb" stroke-width="16"/>
-  <g transform="translate(96 72) scale(1.42)">
-{inner}  </g>
+  <image x="{256 - CAT_W // 2}" y="{500 - CAT_H}" width="{CAT_W}" height="{CAT_H}" href="{cat_uri}"/>
 </svg>
 """
 (ASSETS / "icon.svg").write_text(icon, encoding="utf-8", newline="\n")

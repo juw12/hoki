@@ -165,7 +165,8 @@ html {
   outline-offset: 2px;
 }
 
-.cat:focus-visible > svg {
+.cat:focus-visible > svg,
+.cat:focus-visible > canvas {
   filter:
     drop-shadow(1.5px 0 0 var(--gold))
     drop-shadow(-1.5px 0 0 var(--gold))
@@ -347,7 +348,8 @@ html {
   transition: transform 0.12s ease;
 }
 
-.cat svg {
+.cat svg,
+.cat canvas {
   display: block;
   width: 100%;
   height: 100%;

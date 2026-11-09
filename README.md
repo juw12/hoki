@@ -57,7 +57,7 @@ A real home-screen widget: the cat waves right on your home screen and a tap add
 
 Opening the Hoki app shows the full web app. The widget counts its own luck (stored on the phone); the web app keeps its count in the browser.
 
-How it works: Android widgets cannot run code to animate, so `tools/make_widget_frames.py` renders 16 frames of the same `assets/cat.svg` with the paw beckoning front-to-back along an eased wave, and a `ViewFlipper` plays them (85 ms per frame). The APK is built and published by GitHub Actions (`.github/workflows/android.yml`) on every change under `android/`. It is signed with a deliberately public key (`android/app/hoki-public.p12`) so updates install over each other; it is a sideloaded hobby app, not a Play Store listing.
+How it works: Android widgets cannot run WebGL, so `tools/make_widget_frames.py` renders the same 3D cat as the web app (`js/cat3d.js`) at 9 poses of one front-to-back beckon, and a `ViewFlipper` plays them as a 16-step eased loop (85 ms per step). The APK is built and published by GitHub Actions (`.github/workflows/android.yml`) on every change under `android/`. It is signed with a deliberately public key (`android/app/hoki-public.p12`) so updates install over each other; it is a sideloaded hobby app, not a Play Store listing.
 
 **iPhone:** Apple only allows home-screen widgets from App Store apps, so on iPhone use Share > *Add to Home Screen* (full-screen, offline).
 
@@ -73,7 +73,7 @@ The cat sits on your desktop on the right edge, always on top, with a transparen
 
 - **Click** for luck. **Drag** to move.
 - **Right-click** for sound, always on top, start with Windows, size (S/M/L), move to corner, and quit.
-- No admin rights and no install wizard: it's one PowerShell + WPF script (`desktop/hoki-widget.ps1`) that draws the same `assets/cat.svg` as the web app.
+- No admin rights and no install wizard: it's one PowerShell + WPF script (`desktop/hoki-widget.ps1`) that plays 13 pre-rendered frames of the web app's 3D cat (`desktop/frames/`, ~1 MB), picked by the beckon phase so the luck boost still speeds it up.
 - Files: `%LOCALAPPDATA%\Hoki` (program), `%APPDATA%\Hoki` (your luck + settings), Start menu "Hoki Lucky Cat".
 - Uninstall: right-click → Quit, then delete those two folders and the Start menu shortcut.
 
@@ -90,19 +90,21 @@ powershell -STA -File tools/capture_hoki.ps1                                    
 
 `tools/capture_hoki.ps1` grabs the widget as it is actually shown on your desktop (cat + wallpaper behind it) for the README hero. It waits for the desktop to unlock, starts the widget if it is not running, and only falls back to the offscreen `-Snapshot` render when there is no display.
 
-`python tools/make_icons.py` rebuilds `assets/icon.svg` and the PNG icons from `assets/cat.svg` (needs Playwright + Edge).
+`python tools/make_widget_frames.py` re-renders the Android and Windows widget frames from the 3D model, then `python tools/make_icons.py` rebuilds `assets/icon.svg` and the PNG icons from those frames (needs Pillow, Playwright + Edge). `tools/preview3d.html?fold=0.5` shows the model at any pose.
 The look (palette, type, motion, banned defaults) is written down in `design.md`.
 
 ## How it's built
 
 | Part | Files |
 |---|---|
-| Cat art (shared) | `assets/cat.svg`: flat layered vector shapes; the paw beckons front-to-back like a real maneki-neko: the forearm `#hoki-paw` foreshortens from `data-pivot` and the hand `#hoki-hand` folds toward you at `data-wrist` (amounts in `data-beckon`) |
+| Cat (3D) | `js/cat3d.js`: a procedural glazed-ceramic maneki-neko in three.js (`js/vendor/three.module.min.js`, r170, MIT): calico body, raised arm with a shoulder and a wrist joint, koban coin, bell, cushion with tassels, studio lighting and soft shadows. The paw beckons front-to-back like a real maneki-neko: the wrist and shoulder turn about the sideways axis, toward you. Slow GPUs get a lighter render automatically |
+| Cat (fallback) | `assets/cat.svg`: the flat vector cat, used when WebGL is unavailable (or with `?flat`) |
 | Web / PWA | `index.html`, `css/style.css`, `js/app.js`, `sw.js`, `manifest.webmanifest` |
-| Windows widget | `desktop/hoki-widget.ps1`, `desktop/install.ps1`, `desktop/Hoki.cmd` |
+| Windows widget | `desktop/hoki-widget.ps1`, `desktop/frames/`, `desktop/install.ps1`, `desktop/Hoki.cmd` |
+| Widget frames | `tools/make_widget_frames.py` (Android `drawable-nodpi/cat_*.png` + `desktop/frames/`) |
 | Checks | `tools/check_web.py`, `-Snapshot` mode of the widget |
 
-No build step and no dependencies.
+No build step. The only dependency is three.js, vendored as one file.
 
 For fun. Luck not guaranteed.
 

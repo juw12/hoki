@@ -1,17 +1,22 @@
-"""Render the Android home-screen widget frames from assets/cat.svg.
+"""Render the widget frames from the real 3D cat (js/cat3d.js) for the Android and Windows widgets.
 
-The phone widget cannot run JavaScript, so the wave is a short loop of PNG frames that an
-Android ViewFlipper plays. Each frame is the real cat.svg beckoning front-to-back like the web app:
-the forearm #hoki-paw foreshortens from data-pivot and the hand #hoki-hand folds toward the viewer
-at data-wrist (amounts in data-beckon), on a cosine (ease in/out) path.
+Neither widget can run WebGL, so both play pre-rendered frames of the same three.js model the web
+app shows. The paw beckons front-to-back (wrist and shoulder turn about X, toward the viewer).
 
 Run from the repo root:  python tools/make_widget_frames.py
-Writes android/app/src/main/res/drawable-nodpi/cat_00.png ... cat_NN.png and widget_preview.png,
-plus android/app/src/main/res/layout/widget_hoki.xml (the flipper lists every frame).
+Writes
+  android/app/src/main/res/drawable-nodpi/cat_00.png ... (one per distinct pose) + widget_preview.png
+  android/app/src/main/res/layout/widget_hoki.xml   (a ViewFlipper that plays one eased beckon)
+  desktop/frames/cat_00.png ... cat_12.png          (fold 0 -> 1 in even steps, for hoki-widget.ps1)
+  desktop/frames/frames.json                        (frame count and paw tip per frame, 240x264 space)
 """
+import functools
+import http.server
+import json
 import math
 import os
-import re
+import socketserver
+import threading
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -20,60 +25,77 @@ ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "android" / "app" / "src" / "main" / "res"
 DRAWABLE = RES / "drawable-nodpi"
 LAYOUT = RES / "layout"
-FRAME_COUNT = 16          # one full wave (out and back)
-FRAME_MS = 85             # 16 x 85 ms = 1.36 s per wave, close to the web app's idle wave
-SCALE = 2                 # 240x264 svg -> 480x528 px frames
+DESKTOP_FRAMES = ROOT / "desktop" / "frames"
 
-svg = (ROOT / "assets" / "cat.svg").read_text(encoding="utf-8")
-pivot_x, pivot_y = (float(v) for v in re.search(r'data-pivot="([\d.]+) ([\d.]+)"', svg).groups())
-wrist_x, wrist_y = (float(v) for v in re.search(r'data-wrist="([\d.]+) ([\d.]+)"', svg).groups())
-arm_amount, hand_amount = (float(v) for v in re.search(r'data-beckon="([\d.]+) ([\d.]+)"', svg).groups())
+STAGE_W, STAGE_H = 240, 264   # same box as the old cat.svg viewBox, so widget layouts keep their size
+ANDROID_FLIPS = 16            # one full beckon (out and back)
+ANDROID_FRAME_MS = 85         # 16 x 85 ms = 1.36 s per beckon, close to the web app's idle beckon
+ANDROID_SCALE = 2             # 480x528 px frames
+DESKTOP_STEPS = 12            # 13 frames, fold 0, 1/12, ... 1
+DESKTOP_SCALE = 1.75          # 420x462 px, sharp at the Large size (210 px) on a 200% display
 
-
-def beckon_matrices(fold):
-    """Same as beckonMatrices in js/app.js: fold 0 = paw raised, 1 = folded toward the viewer."""
-    arm_scale = 1 - arm_amount * fold
-    hand_scale = 1 - hand_amount * fold
-    hand_widen = 1 + 0.05 * fold
-    lift = pivot_y * (1 - arm_scale)
-    arm = [1, 0, 0, arm_scale, 0, lift]
-    hand = [hand_widen, 0, 0, arm_scale * hand_scale, wrist_x * (1 - hand_widen), arm_scale * wrist_y * (1 - hand_scale) + lift]
-    return [round(v, 4) for v in arm], [round(v, 4) for v in hand]
+# Android: a cosine path 0 -> 1 -> 0 (eased at both ends); identical poses share one drawable.
+android_folds = [round((1 - math.cos(2 * math.pi * i / ANDROID_FLIPS)) / 2, 3) for i in range(ANDROID_FLIPS)]
+android_unique = sorted(set(android_folds))
+desktop_folds = [round(i / DESKTOP_STEPS, 4) for i in range(DESKTOP_STEPS + 1)]
 
 
-folds = []
-for index in range(FRAME_COUNT):
-    phase = 2 * math.pi * index / FRAME_COUNT
-    folds.append(round((1 - math.cos(phase)) / 2, 3))   # 0 -> 1 -> 0, eased at both ends
+class QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *args):
+        pass
+
+
+server = socketserver.ThreadingTCPServer(("127.0.0.1", 0), functools.partial(QuietHandler, directory=str(ROOT)))
+server.daemon_threads = True
+threading.Thread(target=server.serve_forever, daemon=True).start()
+url = f"http://127.0.0.1:{server.server_address[1]}/tools/preview3d.html?transparent&w={STAGE_W}&h={STAGE_H}"
 
 DRAWABLE.mkdir(parents=True, exist_ok=True)
 LAYOUT.mkdir(parents=True, exist_ok=True)
-for old in DRAWABLE.glob("cat_*.png"):
+DESKTOP_FRAMES.mkdir(parents=True, exist_ok=True)
+for old in list(DRAWABLE.glob("cat_*.png")) + list(DESKTOP_FRAMES.glob("cat_*.png")):
     old.unlink()
 
+
+def render(page, fold, path):
+    page.evaluate("(fold) => window.setFold(fold)", fold)
+    page.locator("#stage").screenshot(path=str(path), omit_background=True)
+    return page.evaluate("() => window.cat.pawPoint()")
+
+
 with sync_playwright() as p:
-    browser = p.chromium.launch(channel="msedge")
-    page = browser.new_page(viewport={"width": 240, "height": 264}, device_scale_factor=SCALE)
-    page.set_content(f"<html><body style='margin:0;background:transparent'>{svg}</body></html>")
-    for index, fold in enumerate(folds):
-        arm, hand = beckon_matrices(fold)
-        page.evaluate(
-            "([a, h]) => {"
-            "document.getElementById('hoki-paw').setAttribute('transform', 'matrix(' + a.join(' ') + ')');"
-            "document.getElementById('hoki-hand').setAttribute('transform', 'matrix(' + h.join(' ') + ')');"
-            "}",
-            [arm, hand],
-        )
-        page.locator("svg").screenshot(path=str(DRAWABLE / f"cat_{index:02d}.png"), omit_background=True)
-    page.evaluate("() => ['hoki-paw', 'hoki-hand'].forEach((id) => document.getElementById(id).removeAttribute('transform'))")
-    page.locator("svg").screenshot(path=str(DRAWABLE / "widget_preview.png"), omit_background=True)
+    # Software GL keeps the output identical on any machine (and works without a GPU).
+    browser = p.chromium.launch(channel="msedge", args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
+
+    page = browser.new_page(viewport={"width": STAGE_W, "height": STAGE_H}, device_scale_factor=ANDROID_SCALE)
+    page.goto(url)
+    page.wait_for_function("window.ready === true", timeout=60000)
+    for index, fold in enumerate(android_unique):
+        render(page, fold, DRAWABLE / f"cat_{index:02d}.png")
+    render(page, 0, DRAWABLE / "widget_preview.png")
+    page.close()
+
+    page = browser.new_page(viewport={"width": STAGE_W, "height": STAGE_H}, device_scale_factor=DESKTOP_SCALE)
+    page.goto(url)
+    page.wait_for_function("window.ready === true", timeout=60000)
+    paws = []
+    for index, fold in enumerate(desktop_folds):
+        point = render(page, fold, DESKTOP_FRAMES / f"cat_{index:02d}.png")
+        paws.append([round(point["x"], 1), round(point["y"], 1)])
+    page.close()
     browser.close()
 
-frames = "\n".join(
+(DESKTOP_FRAMES / "frames.json").write_text(
+    json.dumps({"width": STAGE_W, "height": STAGE_H, "folds": desktop_folds, "paw": paws}, indent=1) + "\n",
+    encoding="utf-8",
+    newline="\n",
+)
+
+flips = "\n".join(
     f'            <ImageView android:layout_width="match_parent" android:layout_height="match_parent"\n'
-    f'                android:scaleType="fitCenter" android:src="@drawable/cat_{i:02d}"\n'
+    f'                android:scaleType="fitCenter" android:src="@drawable/cat_{android_unique.index(fold):02d}"\n'
     f'                android:contentDescription="@string/cat_description" />'
-    for i in range(FRAME_COUNT)
+    for fold in android_folds
 )
 layout = f"""<?xml version="1.0" encoding="utf-8"?>
 <!-- Generated by tools/make_widget_frames.py - edit that script, not this file. -->
@@ -92,9 +114,9 @@ layout = f"""<?xml version="1.0" encoding="utf-8"?>
         android:layout_height="0dp"
         android:layout_weight="1"
         android:autoStart="true"
-        android:flipInterval="{FRAME_MS}"
+        android:flipInterval="{ANDROID_FRAME_MS}"
         android:contentDescription="@string/cat_description">
-{frames}
+{flips}
     </ViewFlipper>
 
     <TextView
@@ -109,5 +131,5 @@ layout = f"""<?xml version="1.0" encoding="utf-8"?>
 </LinearLayout>
 """
 (LAYOUT / "widget_hoki.xml").write_text(layout, encoding="utf-8", newline="\n")
-print(f"wrote {FRAME_COUNT} frames ({FRAME_MS} ms each), folds {folds}")
+print(f"android: {len(android_unique)} poses, {ANDROID_FLIPS} flips at {ANDROID_FRAME_MS} ms; desktop: {len(desktop_folds)} frames")
 os._exit(0)

@@ -42,7 +42,7 @@ def check(condition, message):
 
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(channel="msedge")
+    browser = p.chromium.launch(channel="msedge", args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
 
     # Phone
     phone = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, has_touch=True)
@@ -50,22 +50,35 @@ with sync_playwright() as p:
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
-    page.goto(base)
-    page.wait_for_selector("#hoki-paw")
+    page.goto(base, wait_until="domcontentloaded", timeout=60000)
+    page.wait_for_function("window.hoki && window.hoki.isReady()", timeout=60000)
 
     folds = []
-    for _ in range(16):
+    for _ in range(28):  # ~3 s: two full beckons even on a slow software-GL test machine
         folds.append(page.evaluate("window.hoki.getFold()"))
-        page.wait_for_timeout(90)
+        page.wait_for_timeout(110)
     spread = max(folds) - min(folds)
     check(spread > 0.5, f"paw beckons front-to-back on its own (fold spread {spread:.2f})")
     check(len({round(f, 2) for f in folds}) >= 8, "paw moves continuously, not in a few frames")
-    hand_matrix = page.evaluate("document.getElementById('hoki-hand').getAttribute('transform') || ''")
-    paw_matrix = page.evaluate("document.getElementById('hoki-paw').getAttribute('transform') || ''")
+    check(page.evaluate("window.hoki.getRenderer()") == "3d", "the cat is a real 3D model (WebGL canvas)")
+    poses = []
+    for _ in range(26):  # one full beckon, sampled slowly enough for software WebGL
+        poses.append(page.evaluate("window.hoki.getPose()"))
+        page.wait_for_timeout(110)
+    wrist_spread = max(p["wristX"] for p in poses) - min(p["wristX"] for p in poses)
+    sideways = max(abs(p["wristZ"]) for p in poses)
     check(
-        hand_matrix.startswith("matrix(") and paw_matrix.startswith("matrix(") and "rotate" not in paw_matrix,
-        "beckon is a fold toward the viewer, not a sideways rotation",
+        wrist_spread > 0.4 and sideways < 1e-6,
+        f"beckon folds the paw toward the viewer about the X axis (wrist swing {wrist_spread:.2f} rad, sideways {sideways:.2f})",
     )
+    # Separate context; under software WebGL the busy 3D page can delay the 'load' event, so wait for the DOM.
+    flat_context = browser.new_context(viewport={"width": 390, "height": 844})
+    flat = flat_context.new_page()
+    flat.goto(base + "?flat", wait_until="domcontentloaded", timeout=60000)
+    flat.wait_for_function("window.hoki && window.hoki.isReady()", timeout=60000)
+    flat_ok = flat.evaluate("window.hoki.getRenderer() === 'svg' && !!document.getElementById('hoki-hand')")
+    check(flat_ok, "flat SVG fallback still works (?flat / no WebGL)")
+    flat_context.close()
     serif = page.evaluate("getComputedStyle(document.querySelector('.brand')).fontFamily")
     check("serif" in serif.lower() and "pixel" not in serif.lower(), f"serif display type ({serif[:40]})")
     scene_ok = page.evaluate("!!document.querySelector('.scene .gate-ring') && document.documentElement.dataset.time.length > 0")
@@ -87,8 +100,8 @@ with sync_playwright() as p:
     check(page.inner_text("#next") == "28", f"next lucky number after 8 is {page.inner_text('#next')}")
     page.screenshot(path=str(OUT / "phone_milestone.png"))
 
-    page.reload()
-    page.wait_for_selector("#hoki-paw")
+    page.reload(wait_until="domcontentloaded", timeout=60000)
+    page.wait_for_function("window.hoki && window.hoki.isReady()", timeout=60000)
     check(page.inner_text("#today") == "8" and page.inner_text("#total") == "8", "count survives reload")
 
     page.keyboard.press("Tab")
@@ -114,19 +127,21 @@ with sync_playwright() as p:
     check(not errors, f"no console errors ({errors})")
 
     # Widget mode
+    phone.close()
     widget = browser.new_context(viewport={"width": 260, "height": 300})
     wpage = widget.new_page()
-    wpage.goto(base + "?widget")
-    wpage.wait_for_selector("#hoki-paw")
+    wpage.goto(base + "?widget", wait_until="domcontentloaded", timeout=60000)
+    wpage.wait_for_function("window.hoki && window.hoki.isReady()", timeout=60000)
     check(not wpage.is_visible(".top") and not wpage.is_visible(".foot"), "widget mode hides chrome")
     check(not wpage.is_visible("#fortune-share"), "widget mode hides the fortune Share button")
     wpage.screenshot(path=str(OUT / "widget.png"), omit_background=True)
 
     # Desktop browser
+    widget.close()
     desk = browser.new_context(viewport={"width": 1280, "height": 800})
     dpage = desk.new_page()
-    dpage.goto(base)
-    dpage.wait_for_selector("#hoki-paw")
+    dpage.goto(base, wait_until="domcontentloaded", timeout=60000)
+    dpage.wait_for_function("window.hoki && window.hoki.isReady()", timeout=60000)
     cat_box = dpage.locator("#cat").bounding_box()
     check(cat_box["y"] + cat_box["height"] <= 800, "cat fits a 1280x800 window")
     dpage.screenshot(path=str(OUT / "desktop.png"))
@@ -155,11 +170,20 @@ with sync_playwright() as p:
         "desktop hint sits under the cat",
     )
 
+    # Service worker + manifest
+    dpage.wait_for_timeout(800)
+    sw_ok = dpage.evaluate("navigator.serviceWorker.getRegistration().then(r => !!r)")
+    check(sw_ok, "service worker registers")
+    manifest = dpage.evaluate("fetch('manifest.webmanifest').then(r => r.json())")
+    check(any(i["sizes"] == "512x512" for i in manifest["icons"]), "manifest has a 512px icon")
+    # Only one live 3D page at a time: software WebGL in the test browser is slow.
+    desk.close()
+
     # Dark mode + keyboard focus ring on the cat
     dark = browser.new_context(viewport={"width": 1280, "height": 800}, color_scheme="dark")
     kpage = dark.new_page()
-    kpage.goto(base)
-    kpage.wait_for_selector("#hoki-paw")
+    kpage.goto(base, wait_until="domcontentloaded", timeout=60000)
+    kpage.wait_for_function("window.hoki && window.hoki.isReady()", timeout=60000)
     for _ in range(6):
         kpage.keyboard.press("Tab")
         if kpage.evaluate("document.activeElement && document.activeElement.id") == "cat":
@@ -173,7 +197,7 @@ with sync_playwright() as p:
             // a visible gold contour that traces the cat (stacked drop-shadows on its SVG),
             // plus a solid outline that Windows high-contrast mode can paint
             mark: style.outlineStyle === 'solid' && parseFloat(style.outlineWidth) >= 3
-                && (getComputedStyle(el.querySelector('svg')).filter.match(/drop-shadow/g) || []).length >= 4,
+                && (getComputedStyle(el.querySelector('svg, canvas')).filter.match(/drop-shadow/g) || []).length >= 4,
         };
     }""")
     check(
@@ -184,21 +208,15 @@ with sync_playwright() as p:
     kpage.screenshot(path=str(OUT / "desktop_dark_focus.png"))
 
     # Small phone: nothing wider than the screen, count card on the first screen
+    dark.close()
     small = browser.new_context(viewport={"width": 375, "height": 667}, device_scale_factor=2, has_touch=True)
     spage = small.new_page()
-    spage.goto(base)
-    spage.wait_for_selector("#hoki-paw")
+    spage.goto(base, wait_until="domcontentloaded", timeout=60000)
+    spage.wait_for_function("window.hoki && window.hoki.isReady()", timeout=60000)
     no_hscroll = spage.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
     stats_box = spage.locator(".stats").bounding_box()
     check(no_hscroll and stats_box["y"] + stats_box["height"] <= 667, "375x667: no sideways scroll, luck card on first screen")
     spage.screenshot(path=str(OUT / "phone_small.png"))
-
-    # Service worker + manifest
-    dpage.wait_for_timeout(800)
-    sw_ok = dpage.evaluate("navigator.serviceWorker.getRegistration().then(r => !!r)")
-    check(sw_ok, "service worker registers")
-    manifest = dpage.evaluate("fetch('manifest.webmanifest').then(r => r.json())")
-    check(any(i["sizes"] == "512x512" for i in manifest["icons"]), "manifest has a 512px icon")
 
     browser.close()
 

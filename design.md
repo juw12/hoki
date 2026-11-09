@@ -38,7 +38,16 @@ The moon-gate sky follows the local time: dawn, day, dusk, night (stars appear a
   floaters rise and fade. Everything respects `prefers-reduced-motion`.
 - Tap targets are at least 44 px.
 
-## The cat (`assets/cat.svg`)
+## The cat (`js/cat3d.js`, 3D)
+A glazed-ceramic maneki-neko built from primitives in three.js, seen at 3/4 from the raised-paw side so the
+beckon reads in depth. Cream glaze `#fffaf2`-ish with clearcoat, calico patches `#e9a65f` / `#6a574b` painted
+into the vertex colours, closed smiling eyes and omega mouth as tubes on the head, blush, red collar, gold bell
+and koban (福), red cushion with gold tassels. Warm key light from the upper left, cool fill, rim light and
+soft contact shadows; neutral tone mapping so the palette stays true. The beckon is front-to-back only: wrist
+and shoulder rotate about X (toward the viewer), never sideways. Idle: a slow breath and a small camera sway;
+the pointer adds a little parallax. The widgets use pre-rendered frames of this same model.
+
+## The fallback cat (`assets/cat.svg`)
 Flat shapes with a soft brown outline (`#7a5f4c`, 2.4 px), cream fur `#fffaf2` with `#f1e4d1` shading,
 calico patches `#e9a65f` / `#6a574b`, closed smiling eyes, blush, red collar, gold bell and koban, red
 cushion with gold tassels. No gradients, clip paths or transforms inside the file, so the Windows widget can
@@ -50,4 +59,5 @@ English gloss. No hype words.
 
 ## Banned defaults
 Pixel art or pixel fonts, scanlines and dithering, purple/indigo gradients, glassmorphism, glow blobs as
-decoration, emoji as icons, identical icon cards, gradient text, "Get started" buttons, stock 3D blobs.
+decoration, emoji as icons, identical icon cards, gradient text, "Get started" buttons, stock 3D blobs (the 3D cat is a
+crafted figure with its own palette and lighting, not a generic render).
