@@ -1,6 +1,6 @@
 // Offline support: cache the whole (tiny) app; network first so updates arrive quickly.
 
-const VERSION = 'hoki-v2.4.0';
+const VERSION = 'hoki-v2.5.0';
 const SHELL = [
   './',
   'index.html',

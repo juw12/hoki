@@ -53,13 +53,19 @@ with sync_playwright() as p:
     page.goto(base)
     page.wait_for_selector("#hoki-paw")
 
-    angles = []
+    folds = []
     for _ in range(16):
-        angles.append(page.evaluate("window.hoki.getAngle()"))
+        folds.append(page.evaluate("window.hoki.getFold()"))
         page.wait_for_timeout(90)
-    spread = max(angles) - min(angles)
-    check(spread > 6, f"paw waves smoothly on its own (angle spread {spread:.1f} deg)")
-    check(len({round(a, 1) for a in angles}) >= 8, "paw moves continuously, not in a few frames")
+    spread = max(folds) - min(folds)
+    check(spread > 0.5, f"paw beckons front-to-back on its own (fold spread {spread:.2f})")
+    check(len({round(f, 2) for f in folds}) >= 8, "paw moves continuously, not in a few frames")
+    hand_matrix = page.evaluate("document.getElementById('hoki-hand').getAttribute('transform') || ''")
+    paw_matrix = page.evaluate("document.getElementById('hoki-paw').getAttribute('transform') || ''")
+    check(
+        hand_matrix.startswith("matrix(") and paw_matrix.startswith("matrix(") and "rotate" not in paw_matrix,
+        "beckon is a fold toward the viewer, not a sideways rotation",
+    )
     serif = page.evaluate("getComputedStyle(document.querySelector('.brand')).fontFamily")
     check("serif" in serif.lower() and "pixel" not in serif.lower(), f"serif display type ({serif[:40]})")
     scene_ok = page.evaluate("!!document.querySelector('.scene .gate-ring') && document.documentElement.dataset.time.length > 0")

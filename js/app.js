@@ -6,8 +6,10 @@
 
   const STORE_KEY = 'hoki.v1';
 
-  // Paw motion: assets/cat.svg has one arm group #hoki-paw that rotates around data-pivot
-  // between the two angles in data-paw-range (degrees). The desktop widget reads the same values.
+  // Paw motion: a real maneki-neko beckons front-to-back, not side to side. assets/cat.svg has the
+  // forearm #hoki-paw (foreshortens from the shoulder at data-pivot) and the hand #hoki-hand (folds
+  // toward the viewer at data-wrist); data-beckon gives both scale amounts at full fold. The desktop
+  // widget and tools/make_widget_frames.py use the same matrices (see beckonMatrices).
   const BASE_WAVES_PER_SEC = 0.7;
   const MAX_EXTRA_WAVES_PER_SEC = 2.6;
 
@@ -237,8 +239,10 @@
   // ---------- rendering ----------
   let paw = null;
   let pivot = [0, 0];
-  let pawRange = [-10, 9];
-  let pawAngle = 0;
+  let hand = null;
+  let wrist = [0, 0];
+  let beckon = [0.12, 0.38];
+  let pawFold = 0;
   let catSvg = null;
   let boost = 0;
   let phase = 0;
@@ -266,14 +270,28 @@
     glow.style.transform = `translate(-50%, -50%) scale(${(0.92 + boost * 0.18).toFixed(3)})`;
   }
 
-  // Wave -1..1 -> arm angle: +1 = paw up (first angle), -1 = paw folded forward (second angle).
+  // Fold 0..1 -> two affine matrices: the forearm shortens from the shoulder (leaning toward the
+  // viewer) and the hand shortens toward the wrist and widens a touch (tipping toward the viewer).
+  function beckonMatrices(fold) {
+    const armScale = 1 - beckon[0] * fold;
+    const handScale = 1 - beckon[1] * fold;
+    const handWiden = 1 + 0.05 * fold;
+    const lift = pivot[1] * (1 - armScale);
+    return {
+      arm: [1, 0, 0, armScale, 0, lift],
+      hand: [handWiden, 0, 0, armScale * handScale, wrist[0] * (1 - handWiden), armScale * wrist[1] * (1 - handScale) + lift],
+    };
+  }
+
+  // Wave -1..1: +1 = paw raised and open, -1 = paw folded forward toward the viewer.
   function setPaw(wave) {
-    if (!paw) {
+    if (!paw || !hand) {
       return;
     }
-    const [up, folded] = pawRange;
-    pawAngle = up + ((1 - wave) / 2) * (folded - up);
-    paw.setAttribute('transform', `rotate(${pawAngle.toFixed(2)} ${pivot[0]} ${pivot[1]})`);
+    pawFold = (1 - wave) / 2;
+    const { arm, hand: handMatrix } = beckonMatrices(pawFold);
+    paw.setAttribute('transform', `matrix(${arm.map((v) => v.toFixed(3)).join(' ')})`);
+    hand.setAttribute('transform', `matrix(${handMatrix.map((v) => v.toFixed(3)).join(' ')})`);
   }
 
   function frame(now) {
@@ -463,7 +481,9 @@
     catSvg.setAttribute('focusable', 'false');
     paw = catSvg.querySelector('#hoki-paw');
     pivot = (catSvg.dataset.pivot || '0 0').split(' ').map(Number);
-    pawRange = (catSvg.dataset.pawRange || '-10 9').split(' ').map(Number);
+    hand = catSvg.querySelector('#hoki-hand');
+    wrist = (catSvg.dataset.wrist || '38 90').split(' ').map(Number);
+    beckon = (catSvg.dataset.beckon || '0.12 0.38').split(' ').map(Number);
     requestAnimationFrame((now) => {
       lastFrame = now;
       frame(now);
@@ -477,5 +497,5 @@
   }
 
   // Small hook for automated checks.
-  window.hoki = { tap, state, getBoost: () => boost, getAngle: () => pawAngle, getFortune: () => currentFortune, getShareText: fortuneShareText };
+  window.hoki = { tap, state, getBoost: () => boost, getFold: () => pawFold, getFortune: () => currentFortune, getShareText: fortuneShareText };
 })();

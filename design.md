@@ -34,7 +34,7 @@ The moon-gate sky follows the local time: dawn, day, dusk, night (stars appear a
 - Radius: 20 px cards, 14 px panels, 999 px pills, round icon button.
 - Spacing: 8 / 14 / 20 px steps.
 - Shadow: `0 1px 2px rgba(60,45,25,.05), 0 10px 30px rgba(60,45,25,.08)`.
-- Motion is slow and eased: lanterns sway over 5-6 s, the paw waves by smooth rotation (not frames),
+- Motion is slow and eased: lanterns sway over 5-6 s, the paw beckons front-to-back (forearm leans in, hand folds toward you; not a sideways swing, not frames),
   floaters rise and fade. Everything respects `prefers-reduced-motion`.
 - Tap targets are at least 44 px.
 

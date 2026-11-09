@@ -118,7 +118,8 @@ $svgRoot = $svg.DocumentElement
 $pawPoint = $svgRoot.GetAttribute('data-paw').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
 $counterBox = $svgRoot.GetAttribute('data-counter').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
 $pivot = $svgRoot.GetAttribute('data-pivot').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
-$pawRange = $svgRoot.GetAttribute('data-paw-range').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
+$wrist = $svgRoot.GetAttribute('data-wrist').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
+$beckon = $svgRoot.GetAttribute('data-beckon').Split(' ') | ForEach-Object { [double]::Parse($_, $Culture) }
 
 $BrushConverter = New-Object Windows.Media.BrushConverter
 
@@ -218,6 +219,7 @@ $glow.IsHitTestVisible = $false
 [void]$scene.Children.Add($glow)
 
 $pawLayer = $null
+$handLayer = $null
 foreach ($group in $svg.DocumentElement.ChildNodes) {
     if ($group.LocalName -ne 'g') {
         continue
@@ -232,19 +234,32 @@ foreach ($group in $svg.DocumentElement.ChildNodes) {
             [void]$layer.Children.Add($shape)
         }
     }
+    # The paw beckons front-to-back like the web app: the forearm foreshortens from the shoulder
+    # and the hand folds toward the viewer at the wrist (two matrices, see Set-PawWave).
     if ($group.GetAttribute('id') -eq 'hoki-paw') {
-        # The raised arm rotates around data-pivot, exactly like the web app.
         $pawLayer = $layer
-        $pawLayer.RenderTransform = New-Object Windows.Media.RotateTransform(0, $pivot[0], $pivot[1])
+        $pawLayer.RenderTransform = New-Object Windows.Media.MatrixTransform
+    }
+    if ($group.GetAttribute('id') -eq 'hoki-hand') {
+        $handLayer = $layer
+        $handLayer.RenderTransform = New-Object Windows.Media.MatrixTransform
     }
     [void]$scene.Children.Add($layer)
 }
-# Same mapping as js/app.js: wave +1 = paw up (first angle), -1 = folded forward (second angle).
+# Same mapping as js/app.js beckonMatrices: wave +1 = paw raised, -1 = folded toward the viewer.
 function Set-PawWave([double]$wave) {
-    if ($null -eq $pawLayer) {
+    if ($null -eq $pawLayer -or $null -eq $handLayer) {
         return
     }
-    $pawLayer.RenderTransform.Angle = $pawRange[0] + ((1 - $wave) / 2) * ($pawRange[1] - $pawRange[0])
+    $fold = (1 - $wave) / 2
+    $armScale = 1 - $beckon[0] * $fold
+    $handScale = 1 - $beckon[1] * $fold
+    $handWiden = 1 + 0.05 * $fold
+    $lift = $pivot[1] * (1 - $armScale)
+    $pawLayer.RenderTransform.Matrix = New-Object Windows.Media.Matrix(1, 0, 0, $armScale, 0, $lift)
+    $handLayer.RenderTransform.Matrix = New-Object Windows.Media.Matrix(
+        $handWiden, 0, 0, ($armScale * $handScale),
+        ($wrist[0] * (1 - $handWiden)), ($armScale * $wrist[1] * (1 - $handScale) + $lift))
 }
 Set-PawWave 1
 

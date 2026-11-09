@@ -1,8 +1,9 @@
 """Render the Android home-screen widget frames from assets/cat.svg.
 
 The phone widget cannot run JavaScript, so the wave is a short loop of PNG frames that an
-Android ViewFlipper plays. Each frame is the real cat.svg with #hoki-paw rotated around the
-pivot in data-pivot, sweeping the angles in data-paw-range on a cosine (ease in/out) path.
+Android ViewFlipper plays. Each frame is the real cat.svg beckoning front-to-back like the web app:
+the forearm #hoki-paw foreshortens from data-pivot and the hand #hoki-hand folds toward the viewer
+at data-wrist (amounts in data-beckon), on a cosine (ease in/out) path.
 
 Run from the repo root:  python tools/make_widget_frames.py
 Writes android/app/src/main/res/drawable-nodpi/cat_00.png ... cat_NN.png and widget_preview.png,
@@ -25,13 +26,25 @@ SCALE = 2                 # 240x264 svg -> 480x528 px frames
 
 svg = (ROOT / "assets" / "cat.svg").read_text(encoding="utf-8")
 pivot_x, pivot_y = (float(v) for v in re.search(r'data-pivot="([\d.]+) ([\d.]+)"', svg).groups())
-low, high = (float(v) for v in re.search(r'data-paw-range="(-?[\d.]+) (-?[\d.]+)"', svg).groups())
+wrist_x, wrist_y = (float(v) for v in re.search(r'data-wrist="([\d.]+) ([\d.]+)"', svg).groups())
+arm_amount, hand_amount = (float(v) for v in re.search(r'data-beckon="([\d.]+) ([\d.]+)"', svg).groups())
 
-angles = []
+
+def beckon_matrices(fold):
+    """Same as beckonMatrices in js/app.js: fold 0 = paw raised, 1 = folded toward the viewer."""
+    arm_scale = 1 - arm_amount * fold
+    hand_scale = 1 - hand_amount * fold
+    hand_widen = 1 + 0.05 * fold
+    lift = pivot_y * (1 - arm_scale)
+    arm = [1, 0, 0, arm_scale, 0, lift]
+    hand = [hand_widen, 0, 0, arm_scale * hand_scale, wrist_x * (1 - hand_widen), arm_scale * wrist_y * (1 - hand_scale) + lift]
+    return [round(v, 4) for v in arm], [round(v, 4) for v in hand]
+
+
+folds = []
 for index in range(FRAME_COUNT):
     phase = 2 * math.pi * index / FRAME_COUNT
-    blend = (1 - math.cos(phase)) / 2           # 0 -> 1 -> 0, eased at both ends
-    angles.append(round(low + (high - low) * blend, 2))
+    folds.append(round((1 - math.cos(phase)) / 2, 3))   # 0 -> 1 -> 0, eased at both ends
 
 DRAWABLE.mkdir(parents=True, exist_ok=True)
 LAYOUT.mkdir(parents=True, exist_ok=True)
@@ -42,13 +55,17 @@ with sync_playwright() as p:
     browser = p.chromium.launch(channel="msedge")
     page = browser.new_page(viewport={"width": 240, "height": 264}, device_scale_factor=SCALE)
     page.set_content(f"<html><body style='margin:0;background:transparent'>{svg}</body></html>")
-    for index, angle in enumerate(angles):
+    for index, fold in enumerate(folds):
+        arm, hand = beckon_matrices(fold)
         page.evaluate(
-            "([a, x, y]) => document.getElementById('hoki-paw').setAttribute('transform', `rotate(${a} ${x} ${y})`)",
-            [angle, pivot_x, pivot_y],
+            "([a, h]) => {"
+            "document.getElementById('hoki-paw').setAttribute('transform', 'matrix(' + a.join(' ') + ')');"
+            "document.getElementById('hoki-hand').setAttribute('transform', 'matrix(' + h.join(' ') + ')');"
+            "}",
+            [arm, hand],
         )
         page.locator("svg").screenshot(path=str(DRAWABLE / f"cat_{index:02d}.png"), omit_background=True)
-    page.evaluate("() => document.getElementById('hoki-paw').removeAttribute('transform')")
+    page.evaluate("() => ['hoki-paw', 'hoki-hand'].forEach((id) => document.getElementById(id).removeAttribute('transform'))")
     page.locator("svg").screenshot(path=str(DRAWABLE / "widget_preview.png"), omit_background=True)
     browser.close()
 
@@ -92,5 +109,5 @@ layout = f"""<?xml version="1.0" encoding="utf-8"?>
 </LinearLayout>
 """
 (LAYOUT / "widget_hoki.xml").write_text(layout, encoding="utf-8", newline="\n")
-print(f"wrote {FRAME_COUNT} frames ({FRAME_MS} ms each), angles {angles}")
+print(f"wrote {FRAME_COUNT} frames ({FRAME_MS} ms each), folds {folds}")
 os._exit(0)

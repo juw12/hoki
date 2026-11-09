@@ -57,7 +57,7 @@ A real home-screen widget: the cat waves right on your home screen and a tap add
 
 Opening the Hoki app shows the full web app. The widget counts its own luck (stored on the phone); the web app keeps its count in the browser.
 
-How it works: Android widgets cannot run code to animate, so `tools/make_widget_frames.py` renders 16 frames of the same `assets/cat.svg` with the paw rotated along an eased wave, and a `ViewFlipper` plays them (85 ms per frame). The APK is built and published by GitHub Actions (`.github/workflows/android.yml`) on every change under `android/`. It is signed with a deliberately public key (`android/app/hoki-public.p12`) so updates install over each other; it is a sideloaded hobby app, not a Play Store listing.
+How it works: Android widgets cannot run code to animate, so `tools/make_widget_frames.py` renders 16 frames of the same `assets/cat.svg` with the paw beckoning front-to-back along an eased wave, and a `ViewFlipper` plays them (85 ms per frame). The APK is built and published by GitHub Actions (`.github/workflows/android.yml`) on every change under `android/`. It is signed with a deliberately public key (`android/app/hoki-public.p12`) so updates install over each other; it is a sideloaded hobby app, not a Play Store listing.
 
 **iPhone:** Apple only allows home-screen widgets from App Store apps, so on iPhone use Share > *Add to Home Screen* (full-screen, offline).
 
@@ -97,7 +97,7 @@ The look (palette, type, motion, banned defaults) is written down in `design.md`
 
 | Part | Files |
 |---|---|
-| Cat art (shared) | `assets/cat.svg`: flat layered vector shapes; the raised arm `#hoki-paw` rotates around `data-pivot` between the angles in `data-paw-range` |
+| Cat art (shared) | `assets/cat.svg`: flat layered vector shapes; the paw beckons front-to-back like a real maneki-neko: the forearm `#hoki-paw` foreshortens from `data-pivot` and the hand `#hoki-hand` folds toward you at `data-wrist` (amounts in `data-beckon`) |
 | Web / PWA | `index.html`, `css/style.css`, `js/app.js`, `sw.js`, `manifest.webmanifest` |
 | Windows widget | `desktop/hoki-widget.ps1`, `desktop/install.ps1`, `desktop/Hoki.cmd` |
 | Checks | `tools/check_web.py`, `-Snapshot` mode of the widget |
