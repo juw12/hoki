@@ -76,14 +76,14 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1a1512;
-    --surface: #241e1a;
-    --surface-2: #2f2721;
-    --line: #3d332b;
+    --bg: #221b16;
+    --surface: #2c241e;
+    --surface-2: #382e26;
+    --line: #483b31;
     --text: #efe9e0;
     --muted: #b0a596;
     --gold-ink: #e8be6a;
-    --ring: #3a332b;
+    --ring: #43392f;
     --halo: rgba(217, 164, 65, 0.12);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.4);
     color-scheme: dark;
@@ -208,19 +208,20 @@ html {
   align-items: center;
   gap: 8px;
   padding: 0 14px 0 11px;
-  /* Quiet chrome: no frame until hover, serif italic label like the other captions */
-  border: 1px solid transparent;
+  /* A soft pill that matches the cards: same surface, hairline and gentle shadow */
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: transparent;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(60, 40, 20, 0.06);
   color: var(--muted);
   font: italic 400 0.95rem var(--serif);
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .sound-btn:hover {
-  background: var(--surface);
-  border-color: var(--line);
+  background: var(--surface-2);
+  box-shadow: 0 2px 6px rgba(60, 40, 20, 0.1);
 }
 
 .sound-btn svg {
@@ -521,6 +522,13 @@ html {
   border-radius: 999px;
   background: var(--surface-2);
   overflow: hidden;
+}
+
+.boost-note {
+  margin: 7px 0 0;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--muted);
 }
 
 .bar span {

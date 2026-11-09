@@ -398,10 +398,10 @@ function buildCat() {
   shoulder.rotation.z = 0.4;
   cat.add(shoulder);
   const armColor = ceramic({ color: COLORS.glaze });
-  const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(SIZE.armRadius, SIZE.armLength - SIZE.armRadius, 12, 32), armColor);
+  const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(SIZE.armRadius, SIZE.armLength - SIZE.armRadius, 20, 64), armColor);
   forearm.position.y = SIZE.armLength / 2;
   forearm.scale.set(1.05, 1, 0.95);
-  const shoulderBall = new THREE.Mesh(new THREE.SphereGeometry(SIZE.armRadius * 1.18, 32, 24), armColor);
+  const shoulderBall = new THREE.Mesh(new THREE.SphereGeometry(SIZE.armRadius * 1.18, 64, 48), armColor);
   shoulder.add(forearm, shoulderBall);
   const wrist = new THREE.Group();
   wrist.position.y = SIZE.armLength;
@@ -524,7 +524,9 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
   key.shadow.camera.top = 4.5;
   key.shadow.camera.bottom = -1.5;
   key.shadow.radius = 5;
-  key.shadow.bias = -0.0008;
+  key.shadow.bias = -0.0005;
+  // Normal bias stops self-shadow banding (acne) on the curved, moving arm.
+  key.shadow.normalBias = 0.03;
   scene.add(key);
   const fill = new THREE.DirectionalLight(0xdfe8ff, 0.55);
   fill.position.set(4, 2.5, 3);
