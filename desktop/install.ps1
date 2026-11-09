@@ -13,9 +13,10 @@ $source = if ($env:HOKI_SOURCE) { $env:HOKI_SOURCE } else { 'https://juw12.githu
 $installDir = Join-Path $env:LOCALAPPDATA 'Hoki'
 New-Item -ItemType Directory -Force $installDir | Out-Null
 
-# Updating: stop a running cat first (its single-instance lock would block the new one).
+# Updating: stop any running cat first, wherever it was started from (an install or a repo checkout);
+# its single-instance lock would block the new one.
 $running = Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" |
-    Where-Object { $_.CommandLine -like '*-File*Hoki\hoki-widget.ps1*' }
+    Where-Object { $_.CommandLine -like '*-File*hoki-widget.ps1*' }
 foreach ($process in $running) {
     Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue
     Wait-Process -Id $process.ProcessId -Timeout 5 -ErrorAction SilentlyContinue
