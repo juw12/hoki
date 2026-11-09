@@ -69,12 +69,12 @@ Paste into PowerShell:
 irm https://juw12.github.io/hoki/desktop/install.ps1 | iex
 ```
 
-Or download [Hoki.exe](https://github.com/juw12/hoki/releases/latest/download/Hoki.exe) (one file, ~10 MB, no installer, no admin).
+Or download [Hoki.exe](https://github.com/juw12/hoki/releases/latest/download/Hoki.exe) (one file, about 4 MB, no installer, no admin).
 
 - **Hoki** (Start menu) opens the full app in its own window.
 - **Hoki Lucky Cat** puts the live 3D cat on your desktop: transparent, always on top, bottom right. It is the same 3D cat as the web app, not a flipbook, so it waves smoothly, blinks, hops when tapped, gets petted, and **watches your mouse anywhere on the screen**.
 - **Click** the cat for luck, **drag** to move it, **right-click** for size (S/M/L), sound, *Open Hoki* and *Hide Hoki*. The *Desktop* button in the app window also puts the cat on your desktop.
-- The app window and the desktop cat share one luck count.
+- The app window and the desktop cat share one luck count. Only one Hoki runs at a time; starting it again just shows the window you asked for.
 - How it works: `app/` is a small [Tauri 2](https://tauri.app) shell (Rust, WebView2) around the same `index.html` + `js/cat3d.js`. `app/src/main.rs` opens the windows and feeds the desktop cursor position to the cat 30 times a second. GitHub Actions (`.github/workflows/windows.yml`) builds `Hoki.exe` and attaches it to the latest release.
 - Needs the WebView2 runtime, which ships with Windows 10 and 11. If the download fails, the installer falls back to the older lightweight PowerShell widget (`desktop/hoki-widget.ps1`, 13 pre-rendered frames).
 - Files: `%LOCALAPPDATA%\Hoki\Hoki.exe`, `%APPDATA%\io.github.juw12.hoki` (position and size), WebView2 data in `%LOCALAPPDATA%\io.github.juw12.hoki`.

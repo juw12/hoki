@@ -6,6 +6,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::fs;
+use std::io::{Read, Write};
+use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -21,6 +23,9 @@ const WIDGET: &str = "widget";
 /// Desktop cat sizes (logical px): small, medium, large. Taller than wide so the count pill fits below.
 const WIDGET_SIZES: [(f64, f64); 3] = [(170.0, 196.0), (220.0, 254.0), (290.0, 334.0)];
 const DEFAULT_SIZE: usize = 1;
+
+/// One Hoki at a time: the first copy listens here; later launches (Start menu, installer) hand over and quit.
+const INSTANCE_PORT: u16 = 47288;
 
 /// Where the desktop cat sits and how big it is, kept in the app's config folder.
 struct WidgetSettings {
@@ -191,8 +196,56 @@ fn follow_cursor(app: AppHandle) {
     });
 }
 
+/// Ask an already running Hoki to show its app window (or desktop cat). True when one answered.
+fn hand_off_to_running(widget_only: bool) -> bool {
+    let address = SocketAddr::from(([127, 0, 0, 1], INSTANCE_PORT));
+    let Ok(mut stream) = TcpStream::connect_timeout(&address, Duration::from_millis(400)) else {
+        return false;
+    };
+    let _ = stream.set_read_timeout(Some(Duration::from_millis(800)));
+    let request = if widget_only { "hoki widget\n" } else { "hoki app\n" };
+    if stream.write_all(request.as_bytes()).is_err() {
+        return false;
+    }
+    let mut reply = [0u8; 4];
+    stream.read_exact(&mut reply).is_ok() && &reply == b"hoki"
+}
+
+/// The running Hoki answers later launches by showing the window they asked for.
+fn listen_for_launches(app: AppHandle, listener: TcpListener) {
+    thread::spawn(move || {
+        for incoming in listener.incoming() {
+            let Ok(mut stream) = incoming else {
+                continue;
+            };
+            let _ = stream.set_read_timeout(Some(Duration::from_millis(800)));
+            let mut buffer = [0u8; 32];
+            let count = stream.read(&mut buffer).unwrap_or(0);
+            let request = String::from_utf8_lossy(&buffer[..count]).to_string();
+            if !request.starts_with("hoki ") {
+                continue;
+            }
+            let _ = stream.write_all(b"hoki");
+            if request.contains("widget") {
+                open_widget_window(&app);
+            } else {
+                open_main_window(&app);
+            }
+        }
+    });
+}
+
 fn main() {
     let widget_only = std::env::args().any(|arg| arg == "--widget");
+    let listener = match TcpListener::bind(("127.0.0.1", INSTANCE_PORT)) {
+        Ok(listener) => Some(listener),
+        Err(_) => {
+            if hand_off_to_running(widget_only) {
+                return;
+            }
+            None
+        }
+    };
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![open_app, open_widget, close_widget, widget_drag, widget_size])
         .on_window_event(|window, event| {
@@ -212,6 +265,9 @@ fn main() {
                 open_widget_window(&handle);
             } else {
                 open_main_window(&handle);
+            }
+            if let Some(listener) = listener {
+                listen_for_launches(handle.clone(), listener);
             }
             follow_cursor(handle);
             Ok(())
