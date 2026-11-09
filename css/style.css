@@ -836,9 +836,13 @@ html {
     grid-column: 2;
     grid-row: 2;
     justify-self: start;
-    align-self: center;
+    align-self: stretch; /* full stage height: stats meet the cat's top, footer anchors the lower right */
     align-items: flex-start;
     max-width: 400px;
+  }
+
+  .foot {
+    margin-top: auto; /* sink the install footer to the column's bottom, filling the lower-right space */
   }
 
   .hint {

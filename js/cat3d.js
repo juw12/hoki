@@ -207,7 +207,15 @@ function buildCat() {
     ear.position.set(side * 0.74, 0.74, -0.02);
     ear.rotation.z = -side * 0.42;
     ear.rotation.x = -0.08;
-    const outer = new THREE.Mesh(earGeometry(SIZE.earRadius, SIZE.earHeight), ceramic({ color: side > 0 ? COLORS.calico : COLORS.glaze }));
+    const earGeo = earGeometry(SIZE.earRadius, SIZE.earHeight);
+    const earMaterial = side > 0 ? ceramic({ color: COLORS.calico }) : ceramic({ vertexColors: true });
+    if (side < 0) {
+      // A soft warm shade on the cream ear so it carries as much weight as the calico one.
+      paintPatches(earGeo, new THREE.Vector3(1, 1, 0.62), [
+        { center: new THREE.Vector3(0, 0.26, 0.1), radius: 0.24, color: new THREE.Color('#f1dcc3'), strength: 0.5 },
+      ]);
+    }
+    const outer = new THREE.Mesh(earGeo, earMaterial);
     outer.scale.z = 0.62;
     const inner = new THREE.Mesh(
       earGeometry(SIZE.earRadius * 0.66, SIZE.earHeight * 0.78),
