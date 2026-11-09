@@ -1,8 +1,10 @@
-// Hoki in 3D: a glazed-ceramic maneki-neko built from simple solids with three.js (vendored, MIT).
+// Hoki in 3D: a soft-glazed kawaii maneki-neko built from simple solids with three.js (vendored, MIT).
 //
-// The raised paw beckons the way a real lucky cat does: the forearm leans in from the shoulder and
-// the hand folds toward you at the wrist (rotations about the X axis, so the motion is front-to-back).
-// Everything is procedural and parametric: change a number in SIZE or COLORS and the cat rebuilds.
+// Hoki faces you. The raised paw beckons the way a real lucky cat does: the forearm leans in from the
+// shoulder and the hand folds toward you at the wrist (rotations about X, so the motion is front-to-back).
+// It is alive: big glossy eyes follow your pointer, it blinks, squeezes its eyes shut happily when you tap
+// it, leans into your hand when you stroke its head, twitches its ears and sways its tail.
+// Everything is procedural and parametric: change a number in SIZE, EYE or COLORS and the cat rebuilds.
 
 import * as THREE from './vendor/three.module.min.js';
 
@@ -11,18 +13,21 @@ const SIZE = {
   bodyRadius: 1.0,
   bodyScale: [1.0, 1.06, 0.9],
   bodyY: 1.0,
-  headRadius: 1.0,
-  headScale: [1.24, 1.02, 1.0],
-  headY: 2.42,
+  headRadius: 1.05,
+  headScale: [1.24, 1.0, 0.98],
+  headY: 2.48,
   earHeight: 0.66,
   earRadius: 0.36,
-  shoulder: [-0.78, 1.58, 0.22],   // the raised (right) arm hinges here
+  shoulder: [-0.94, 1.6, 0.34],    // the raised (right) arm hinges here, clear of the cheek
   armLength: 0.92,
   armRadius: 0.25,
   pawRadius: 0.36,
   coinCenter: [0.42, 0.92, 0.86],
-  cushionSize: [3.3, 2.3],
+  groundY: -0.06,                  // the cat sits straight on the ground (no cushion)
 };
+
+// Big, low-set, wide kawaii eyes (head-local units) with two catch-light sparkles.
+const EYE = { x: 0.45, y: 0.04, rx: 0.2, ry: 0.245, depth: 0.1 };
 
 const COLORS = {
   glaze: new THREE.Color('#fffbf4'),
@@ -34,8 +39,8 @@ const COLORS = {
   ink: new THREE.Color('#4e3528'),
   collar: new THREE.Color('#c23b2e'),
   gold: new THREE.Color('#d9a441'),
-  cushion: new THREE.Color('#a8322c'),
-  tassel: new THREE.Color('#e0b14a'),
+  eye: new THREE.Color('#2a1a14'),
+  iris: new THREE.Color('#8a5634'),
 };
 
 // Beckon: how far the hand folds (radians at full fold) and how far the forearm leans in.
@@ -45,9 +50,12 @@ const BECKON = { wrist: 1.05, arm: 0.28 };
 function ceramic(options = {}) {
   return new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
-    roughness: 0.5,
-    clearcoat: 0.35,
-    clearcoatRoughness: 0.42,
+    roughness: 0.52,
+    clearcoat: 0.3,
+    clearcoatRoughness: 0.45,
+    sheen: 0.35,
+    sheenRoughness: 0.8,
+    sheenColor: new THREE.Color('#fff0dc'),
     ...options,
   });
 }
@@ -98,6 +106,22 @@ function headSurface(x, y, lift = 0) {
   const point = new THREE.Vector3(x, y, w * r * sz);
   const normal = new THREE.Vector3(u / sx, v / sy, w / sz).normalize();
   return point.add(normal.clone().multiplyScalar(lift));
+}
+
+function headNormal(x, y) {
+  const [sx, sy, sz] = SIZE.headScale;
+  const r = SIZE.headRadius;
+  const u = x / (r * sx);
+  const v = y / (r * sy);
+  const w = Math.sqrt(Math.max(0, 1 - u * u - v * v));
+  return new THREE.Vector3(u / sx, v / sy, w / sz).normalize();
+}
+
+// Sit an object on the face so its local +Z points out of the head.
+function placeOnHead(object, x, y, lift = 0) {
+  object.position.copy(headSurface(x, y, lift));
+  object.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), headNormal(x, y));
+  return object;
 }
 
 // A smooth stroke drawn on the face (eyes, mouth, whiskers) as a thin tube.
@@ -154,22 +178,6 @@ function coinTexture() {
   return texture;
 }
 
-function roundedRectShape(width, depth, radius) {
-  const shape = new THREE.Shape();
-  const x = -width / 2;
-  const y = -depth / 2;
-  shape.moveTo(x + radius, y);
-  shape.lineTo(x + width - radius, y);
-  shape.quadraticCurveTo(x + width, y, x + width, y + radius);
-  shape.lineTo(x + width, y + depth - radius);
-  shape.quadraticCurveTo(x + width, y + depth, x + width - radius, y + depth);
-  shape.lineTo(x + radius, y + depth);
-  shape.quadraticCurveTo(x, y + depth, x, y + depth - radius);
-  shape.lineTo(x, y + radius);
-  shape.quadraticCurveTo(x, y, x + radius, y);
-  return shape;
-}
-
 // ---------- the cat ----------
 function buildCat() {
   const cat = new THREE.Group();
@@ -196,12 +204,13 @@ function buildCat() {
   paintPatches(skull.geometry, headScale, [
     { center: new THREE.Vector3(0.95, 0.72, 0.1), radius: 0.62, color: COLORS.calico },
     { center: new THREE.Vector3(-0.46, 0.74, 0.6), radius: 0.2, color: COLORS.spot },
-    { center: headSurface(-0.7, -0.24), radius: 0.2, color: COLORS.blush, strength: 0.6 },
-    { center: headSurface(0.7, -0.24), radius: 0.2, color: COLORS.blush, strength: 0.6 },
+    { center: headSurface(-0.76, -0.27), radius: 0.24, color: COLORS.blush, strength: 0.85 },
+    { center: headSurface(0.76, -0.27), radius: 0.24, color: COLORS.blush, strength: 0.85 },
   ]);
   head.add(skull);
 
-  // Ears: rounded cones with a pink inside, the right one calico.
+  // Ears: rounded cones with a pink inside, the right one calico. Kept so they can twitch.
+  const ears = [];
   for (const side of [-1, 1]) {
     const ear = new THREE.Group();
     ear.position.set(side * 0.74, 0.74, -0.02);
@@ -224,21 +233,56 @@ function buildCat() {
     inner.position.set(0, SIZE.earHeight * 0.05, SIZE.earRadius * 0.3);
     inner.scale.z = 0.36;
     ear.add(outer, inner);
+    ear.userData = { side, baseX: ear.rotation.x, baseZ: ear.rotation.z };
+    ears.push(ear);
     head.add(ear);
   }
 
-  // Face: happy closed eyes, a small nose, an omega mouth and whiskers.
+  // Face: big glossy eyes with sparkles (plus happy '^ ^' eyes for taps and pets), whisker pads,
+  // a small nose, an omega mouth and whiskers.
+  const eyeMaterial = new THREE.MeshPhysicalMaterial({
+    color: COLORS.eye,
+    roughness: 0.12,
+    clearcoat: 1,
+    clearcoatRoughness: 0.04,
+  });
+  const irisMaterial = new THREE.MeshPhysicalMaterial({ color: COLORS.iris, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.05 });
+  const sparkle = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const eyes = [];
+  const happyEyes = [];
   for (const side of [-1, 1]) {
-    head.add(faceStroke(arcPoints(side * 0.44, 0.08, 0.17, 0.11, 0, Math.PI), 0.032, ink));
+    const socket = placeOnHead(new THREE.Group(), side * EYE.x, EYE.y, -0.012);
+    const look = new THREE.Group();   // shifts with the gaze and squashes for blinks
+    socket.add(look);
+    const eyeball = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), eyeMaterial);
+    eyeball.scale.set(EYE.rx, EYE.ry, EYE.depth);
+    const iris = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 24), irisMaterial);
+    iris.scale.set(EYE.rx * 0.66, EYE.ry * 0.42, EYE.depth * 0.42);
+    iris.position.set(0, -EYE.ry * 0.42, EYE.depth * 0.6);
+    const bigSparkle = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), sparkle);
+    bigSparkle.scale.set(EYE.rx * 0.32, EYE.ry * 0.3, 0.01);
+    bigSparkle.position.set(-side * EYE.rx * 0.28 - EYE.rx * 0.05, EYE.ry * 0.36, EYE.depth * 0.95);
+    const smallSparkle = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), sparkle);
+    smallSparkle.scale.set(EYE.rx * 0.14, EYE.ry * 0.12, 0.01);
+    smallSparkle.position.set(side * EYE.rx * 0.34, -EYE.ry * 0.18, EYE.depth * 0.95);
+    look.add(eyeball, iris, bigSparkle, smallSparkle);
+    head.add(socket);
+    eyes.push(look);
+    const happy = faceStroke(arcPoints(side * EYE.x, EYE.y - 0.06, 0.17, 0.12, 0, Math.PI), 0.034, ink);
+    happy.visible = false;
+    head.add(happy);
+    happyEyes.push(happy);
+
+    // Whiskers fanning out from the cheeks.
     for (const [dy, tilt] of [[-0.12, 0.06], [-0.22, -0.02]]) {
-      const start = [side * 0.92, -0.14 + dy];
-      const end = [side * 1.4, -0.14 + dy + tilt];
+      const start = [side * 0.92, -0.16 + dy];
+      const end = [side * 1.42, -0.16 + dy + tilt];
       const points = [start, [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2 + 0.015], end];
       const curve = new THREE.CatmullRomCurve3(
         points.map(([x, y], index) => {
-          const base = headSurface(Math.min(Math.abs(x), 1.18) * Math.sign(x), y, 0.02);
+          const base = headSurface(Math.min(Math.abs(x), 1.2) * Math.sign(x), y, 0.02);
           base.z += index * 0.06;
-          if (Math.abs(x) > 1.18) {
+          if (Math.abs(x) > 1.2) {
             base.x = x;
           }
           return base;
@@ -247,11 +291,16 @@ function buildCat() {
       head.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 12, 0.016, 6, false), ink));
     }
   }
-  const nose = ellipsoid(0.085, [1.15, 0.75, 0.7], ceramic({ color: '#e8877f' }), 32);
-  nose.position.copy(headSurface(0, -0.12, 0.02));
+  // Whisker pads: two soft bumps under the nose, the way a real cat's muzzle sits.
+  const padGlaze = ceramic({ color: COLORS.glaze });
+  for (const side of [-1, 1]) {
+    const muzzle = placeOnHead(ellipsoid(0.13, [1.15, 0.85, 0.5], padGlaze, 32), side * 0.11, -0.27, -0.035);
+    head.add(muzzle);
+  }
+  const nose = placeOnHead(ellipsoid(0.08, [1.25, 0.8, 0.7], ceramic({ color: '#ec8a83', clearcoat: 0.8 }), 32), 0, -0.17, 0.03);
   head.add(nose);
   for (const side of [-1, 1]) {
-    head.add(faceStroke(arcPoints(side * 0.085, -0.2, 0.085, 0.07, Math.PI, Math.PI * 2), 0.02, ink));
+    head.add(faceStroke(arcPoints(side * 0.085, -0.25, 0.085, 0.07, Math.PI, Math.PI * 2), 0.02, ink, 0.05));
   }
   cat.add(head);
 
@@ -307,13 +356,18 @@ function buildCat() {
     }
   }
 
-  // Tail curling up behind the right hip, with a calico tip.
-  const tailCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.55, 0.25, -0.65),
-    new THREE.Vector3(1.05, 0.28, -0.42),
-    new THREE.Vector3(1.32, 0.6, -0.05),
-    new THREE.Vector3(1.28, 1.02, 0.12),
-  ]);
+  // Tail curling up behind the right hip, with a calico tip; it pivots at its root so it can sway.
+  const tail = new THREE.Group();
+  const tailRoot = new THREE.Vector3(0.55, 0.25, -0.65);
+  tail.position.copy(tailRoot);
+  const tailCurve = new THREE.CatmullRomCurve3(
+    [
+      new THREE.Vector3(0.55, 0.25, -0.65),
+      new THREE.Vector3(1.05, 0.28, -0.42),
+      new THREE.Vector3(1.32, 0.6, -0.05),
+      new THREE.Vector3(1.28, 1.02, 0.12),
+    ].map((point) => point.sub(tailRoot)),
+  );
   const tailGeometry = new THREE.TubeGeometry(tailCurve, 48, 0.14, 20, false);
   const tailColors = new Float32Array(tailGeometry.attributes.position.count * 3);
   const uv = tailGeometry.attributes.uv;
@@ -323,15 +377,16 @@ function buildCat() {
     tailColor.toArray(tailColors, i * 3);
   }
   tailGeometry.setAttribute('color', new THREE.BufferAttribute(tailColors, 3));
-  cat.add(new THREE.Mesh(tailGeometry, glaze));
+  tail.add(new THREE.Mesh(tailGeometry, glaze));
   const tailTip = new THREE.Mesh(new THREE.SphereGeometry(0.14, 24, 18), ceramic({ color: COLORS.calico }));
   tailTip.position.copy(tailCurve.getPoint(1));
-  cat.add(tailTip);
+  tail.add(tailTip);
+  cat.add(tail);
 
   // The raised, beckoning arm: shoulder -> forearm -> wrist -> paw with pink pads.
   const shoulder = new THREE.Group();
   shoulder.position.set(...SIZE.shoulder);
-  shoulder.rotation.z = 0.34;
+  shoulder.rotation.z = 0.4;
   cat.add(shoulder);
   const armColor = ceramic({ color: COLORS.glaze });
   const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(SIZE.armRadius, SIZE.armLength - SIZE.armRadius, 12, 32), armColor);
@@ -364,38 +419,35 @@ function buildCat() {
       node.receiveShadow = true;
     }
   });
-  return { cat, shoulder, wrist, pawTip, head };
+  return { cat, shoulder, wrist, pawTip, head, eyes, happyEyes, ears, tail };
 }
 
-function buildCushion() {
+// No cushion: Hoki sits on an invisible floor that only catches its shadow, plus a soft contact blob.
+function buildGround() {
   const group = new THREE.Group();
-  const [width, depth] = SIZE.cushionSize;
-  const geometry = new THREE.ExtrudeGeometry(roundedRectShape(width - 0.4, depth - 0.4, 0.35), {
-    depth: 0.18,
-    bevelEnabled: true,
-    bevelThickness: 0.17,
-    bevelSize: 0.2,
-    bevelSegments: 10,
-    curveSegments: 24,
-  });
-  geometry.rotateX(-Math.PI / 2);
-  geometry.translate(0, -0.35, 0);
-  const cushion = new THREE.Mesh(
-    geometry,
-    new THREE.MeshPhysicalMaterial({ color: COLORS.cushion, roughness: 0.7, sheen: 0.6, sheenColor: new THREE.Color('#d0675a'), sheenRoughness: 0.6 }),
+  const catcher = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), new THREE.ShadowMaterial({ opacity: 0.11 }));
+  catcher.rotation.x = -Math.PI / 2;
+  catcher.position.y = SIZE.groundY;
+  catcher.receiveShadow = true;
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const g = canvas.getContext('2d');
+  const gradient = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  gradient.addColorStop(0, 'rgba(70, 45, 30, 0.42)');
+  gradient.addColorStop(0.55, 'rgba(70, 45, 30, 0.16)');
+  gradient.addColorStop(1, 'rgba(70, 45, 30, 0)');
+  g.fillStyle = gradient;
+  g.fillRect(0, 0, size, size);
+  const blobTexture = new THREE.CanvasTexture(canvas);
+  const blob = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.9, 2.1),
+    new THREE.MeshBasicMaterial({ map: blobTexture, transparent: true, depthWrite: false }),
   );
-  cushion.receiveShadow = true;
-  group.add(cushion);
-  const piping = new THREE.MeshPhysicalMaterial({ color: COLORS.tassel, metalness: 0.5, roughness: 0.35 });
-  for (const sx of [-1, 1]) {
-    for (const sz of [-1, 1]) {
-      const knot = new THREE.Mesh(new THREE.SphereGeometry(0.09, 20, 14), piping);
-      knot.position.set((sx * width) / 2 - sx * 0.05, -0.18, (sz * depth) / 2 - sz * 0.05);
-      const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.28, 20), piping);
-      tassel.position.set(knot.position.x + sx * 0.03, -0.36, knot.position.z + sz * 0.03);
-      group.add(knot, tassel);
-    }
-  }
+  blob.rotation.x = -Math.PI / 2;
+  blob.position.set(0, SIZE.groundY + 0.004, 0.12);
+  group.add(catcher, blob);
   return group;
 }
 
@@ -450,7 +502,7 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
   scene.environment = studioEnvironment(renderer);
   scene.environmentIntensity = 0.55;
   const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 60);
-  const target = new THREE.Vector3(0, 1.62, 0);
+  const target = new THREE.Vector3(0, 1.86, 0);
 
   // Warm key light from the upper left, a cool fill and a rim light so the glaze reads as round.
   scene.add(new THREE.HemisphereLight(0xffffff, 0xc9b8aa, 0.8));
@@ -474,11 +526,11 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
 
   const root = new THREE.Group();
   scene.add(root);
-  const { cat, shoulder, wrist, pawTip, head } = buildCat();
-  root.add(cat, buildCushion());
+  const { cat, shoulder, wrist, pawTip, head, eyes, happyEyes, ears, tail } = buildCat();
+  root.add(cat, buildGround());
 
-  // 3/4 view from slightly above and from the raised-paw side, so the beckon reads in depth.
-  const view = { yaw: -0.32, pitch: 0.2, distance: 11.2 };
+  // Straight-on view, a touch from above: Hoki looks right at you.
+  const view = { yaw: 0, pitch: 0.12, distance: 10.6 };
   function placeCamera(extraYaw = 0, extraPitch = 0) {
     const yaw = view.yaw + extraYaw;
     const pitch = view.pitch + extraPitch;
@@ -506,34 +558,117 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
 
   let fold = 0;
   let time = 0;
-  let hop = 0;
-  const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+  let hop = 1;
+  // Interaction state: where the pointer is (-1..1), how happy Hoki is, petting and blinking.
+  const pointer = { x: 0, y: 0, tx: 0, ty: 0, active: false, lastX: 0, lastY: 0 };
+  let happy = 0;          // seconds of '^ ^' eyes left (tap)
+  let pet = 0;            // 0..1, rises while you stroke its head
+  let earTwitch = 0;      // seconds left of an ear flick
+  let nextBlink = 2.5;
+  let blinkAge = 1;
+  const interactive = sway;
+  let forcedHappy = false;   // previews and widget frames can show the '^ ^' face
+
   container.addEventListener('pointermove', (event) => {
+    if (!interactive) {
+      return;
+    }
     const rect = container.getBoundingClientRect();
-    pointer.tx = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
-    pointer.ty = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+    const nx = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const ny = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+    // Stroking the upper half (the head) pets Hoki; speed decides how much.
+    if (pointer.active && ny < 0.05 && Math.abs(nx) < 0.75) {
+      const travel = Math.hypot(nx - pointer.lastX, ny - pointer.lastY);
+      pet = Math.min(1, pet + travel * 1.6);
+    }
+    pointer.tx = nx;
+    pointer.ty = ny;
+    pointer.lastX = nx;
+    pointer.lastY = ny;
+    pointer.active = true;
   });
   container.addEventListener('pointerleave', () => {
     pointer.tx = 0;
     pointer.ty = 0;
+    pointer.active = false;
   });
 
-  function pose() {
+  function pose(dt) {
     // Front-to-back beckon: both joints turn about X (toward the viewer), never sideways.
     wrist.rotation.x = fold * BECKON.wrist;
     shoulder.rotation.x = 0.12 + fold * BECKON.arm;
-    const bob = Math.sin(time * 1.3) * 0.012;
-    cat.position.y = bob + Math.sin(Math.min(1, hop) * Math.PI) * 0.12;
-    head.rotation.z = sway ? Math.sin(time * 0.8) * 0.035 : 0;
-    head.rotation.x = -fold * 0.04;
+    const bob = interactive ? Math.sin(time * 1.3) * 0.012 : 0;
+    cat.position.y = bob + Math.sin(Math.min(1, hop) * Math.PI) * 0.14;
+
+    // Where Hoki looks: at the pointer, or a slow idle glance around when nobody is there.
+    pointer.x += (pointer.tx - pointer.x) * 0.1;
+    pointer.y += (pointer.ty - pointer.y) * 0.1;
+    let lookX = 0;
+    let lookY = 0;
+    if (interactive) {
+      if (pointer.active) {
+        lookX = pointer.x;
+        lookY = pointer.y + 0.35;   // the head sits in the upper part of the box
+      } else {
+        lookX = Math.sin(time * 0.37) * 0.35;
+        lookY = Math.sin(time * 0.23) * 0.15;
+      }
+    }
+    lookX = Math.max(-1, Math.min(1, lookX));
+    lookY = Math.max(-1, Math.min(1, lookY));
+    const petting = smooth(0.25, 0.6, pet);
+    head.rotation.y = lookX * 0.32;
+    head.rotation.x = lookY * 0.16 - fold * 0.04 + petting * 0.08;
+    head.rotation.z = (interactive ? Math.sin(time * 0.8) * 0.03 : 0) - lookX * 0.05 + petting * 0.14;
+    for (const eye of eyes) {
+      eye.position.x = lookX * 0.035;
+      eye.position.y = -lookY * 0.03;
+    }
+
+    // Blink every few seconds (a quick squash of the eyes).
+    let openness = 1;
+    if (interactive) {
+      blinkAge += dt;
+      nextBlink -= dt;
+      if (nextBlink <= 0) {
+        blinkAge = 0;
+        nextBlink = 2.2 + Math.random() * 3.2;
+      }
+      if (blinkAge < 0.16) {
+        openness = 1 - Math.sin((blinkAge / 0.16) * Math.PI) * 0.92;
+      }
+    }
+    const showHappy = forcedHappy || happy > 0 || petting > 0.5;
+    for (const eye of eyes) {
+      eye.scale.y = openness;
+      eye.visible = !showHappy;
+    }
+    for (const arc of happyEyes) {
+      arc.visible = showHappy;
+    }
+
+    // Ears flick after a tap and fold back softly while being petted.
+    const flick = earTwitch > 0 ? Math.sin(earTwitch * 40) * 0.18 * (earTwitch / 0.45) : 0;
+    for (const ear of ears) {
+      const { side, baseX, baseZ } = ear.userData;
+      ear.rotation.x = baseX - petting * 0.35 + (side > 0 ? flick : flick * 0.6);
+      ear.rotation.z = baseZ - side * petting * 0.12;
+    }
+
+    // Tail sways lazily, faster when Hoki is happy.
+    const wag = interactive ? Math.sin(time * (showHappy ? 6 : 1.6)) * (showHappy ? 0.22 : 0.1) : 0;
+    tail.rotation.y = wag;
+    tail.rotation.z = wag * 0.4;
+
+    happy = Math.max(0, happy - dt);
+    earTwitch = Math.max(0, earTwitch - dt);
+    pet = Math.max(0, pet - dt * 0.45);
   }
 
-  function render() {
-    pose();
-    pointer.x += (pointer.tx - pointer.x) * 0.08;
-    pointer.y += (pointer.ty - pointer.y) * 0.08;
-    const idle = sway ? Math.sin(time * 0.35) * 0.08 : 0;
-    placeCamera(idle - pointer.x * 0.22, pointer.y * 0.06);
+  function render(dt = 0) {
+    pose(dt);
+    const idle = interactive ? Math.sin(time * 0.35) * 0.03 : 0;
+    placeCamera(idle - pointer.x * 0.04, pointer.y * 0.02);
     renderer.render(scene, camera);
   }
 
@@ -547,10 +682,23 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
       if (hop < 1) {
         hop = Math.min(1, hop + dt * 4.5);
       }
-      render();
+      render(dt);
     },
+    // A tap: a little hop, happy '^ ^' eyes and an ear flick.
     hop() {
       hop = 0;
+      if (interactive) {
+        happy = 0.9;
+        earTwitch = 0.45;
+      }
+    },
+    setHappy(on) {
+      forcedHappy = Boolean(on);
+      render();
+    },
+    // 0..1 how much Hoki is being petted right now (the app can purr or count it).
+    petting() {
+      return smooth(0.25, 0.6, pet);
     },
     // Cheaper render for slow GPUs: 1x pixels and no soft shadows.
     lighten() {

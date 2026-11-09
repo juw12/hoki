@@ -851,7 +851,7 @@ html {
     justify-self: end;
     align-self: start;
     width: min(42vw, calc((100vh - 140px) / 1.1), 480px);
-    margin: -16px 0 0; /* tuck under the cushion: the grid gap alone left the hint floating */
+    margin: -16px 0 0; /* tuck under the cat's feet: the grid gap alone left the hint floating */
     text-align: center;
     font-size: 1.2rem;
   }

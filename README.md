@@ -97,7 +97,7 @@ The look (palette, type, motion, banned defaults) is written down in `design.md`
 
 | Part | Files |
 |---|---|
-| Cat (3D) | `js/cat3d.js`: a procedural glazed-ceramic maneki-neko in three.js (`js/vendor/three.module.min.js`, r170, MIT): calico body, raised arm with a shoulder and a wrist joint, koban coin, bell, cushion with tassels, studio lighting and soft shadows. The paw beckons front-to-back like a real maneki-neko: the wrist and shoulder turn about the sideways axis, toward you. Slow GPUs get a lighter render automatically |
+| Cat (3D) | `js/cat3d.js`: a procedural glazed-ceramic maneki-neko in three.js (`js/vendor/three.module.min.js`, r170, MIT): faces you with big glossy kawaii eyes, calico body, raised arm with a shoulder and a wrist joint, koban coin and bell, sitting on a soft contact shadow (no cushion). It is interactive: eyes and head follow your pointer, it blinks, taps make it hop with happy `^ ^` eyes and an ear flick, stroking its head pets it, and its tail sways. The paw beckons front-to-back like a real maneki-neko: the wrist and shoulder turn about the sideways axis, toward you. Slow GPUs get a lighter render automatically |
 | Cat (fallback) | `assets/cat.svg`: the flat vector cat, used when WebGL is unavailable (or with `?flat`) |
 | Web / PWA | `index.html`, `css/style.css`, `js/app.js`, `sw.js`, `manifest.webmanifest` |
 | Windows widget | `desktop/hoki-widget.ps1`, `desktop/frames/`, `desktop/install.ps1`, `desktop/Hoki.cmd` |

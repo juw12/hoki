@@ -20,7 +20,7 @@ flat layered SVG scenes) and from Sansa, the Korean web temple (calm scenery fir
 | `--muted` | `#6b6157` | secondary text (5.5:1 on bg) |
 | `--gold` | `#d9a441` | fills only (bar, coins, caps) |
 | `--gold-ink` | `#8a6418` | gold text on light surfaces (5:1) |
-| `--red` | `#b7443a` | lantern, cushion, milestone character |
+| `--red` | `#b7443a` | lantern, counter pill, milestone character |
 
 Dark mode follows the system: `#14110f` page, `#1d1a17` cards, `#efe9e0` text, `#e8be6a` gold text.
 The moon-gate sky follows the local time: dawn, day, dusk, night (stars appear at night).
@@ -39,13 +39,18 @@ The moon-gate sky follows the local time: dawn, day, dusk, night (stars appear a
 - Tap targets are at least 44 px.
 
 ## The cat (`js/cat3d.js`, 3D)
-A glazed-ceramic maneki-neko built from primitives in three.js, seen at 3/4 from the raised-paw side so the
-beckon reads in depth. Cream glaze `#fffaf2`-ish with clearcoat, calico patches `#e9a65f` / `#6a574b` painted
-into the vertex colours, closed smiling eyes and omega mouth as tubes on the head, blush, red collar, gold bell
-and koban (福), red cushion with gold tassels. Warm key light from the upper left, cool fill, rim light and
-soft contact shadows; neutral tone mapping so the palette stays true. The beckon is front-to-back only: wrist
-and shoulder rotate about X (toward the viewer), never sideways. Idle: a slow breath and a small camera sway;
-the pointer adds a little parallax. The widgets use pre-rendered frames of this same model.
+A soft-glazed kawaii maneki-neko built from primitives in three.js, seen straight on so Hoki looks right at
+you. Cream glaze `#fffaf2`-ish with a light clearcoat and a warm sheen, calico patches `#e9a65f` / `#6a574b`
+painted into the vertex colours, a big head, big low-set glossy eyes (dark `#2a1a14` with a brown lower iris and
+two white catch-lights), whisker pads, a small pink nose, omega mouth, whiskers, rosy blush, red collar, gold bell
+and koban (福). No cushion: the cat sits on the floor with a soft contact shadow. Warm key light from the upper
+left, cool fill, rim light; neutral tone mapping so the palette stays true. The beckon is front-to-back only:
+wrist and shoulder rotate about X (toward the viewer), never sideways.
+
+Alive, not a statue: the head and eyes follow the pointer (an idle glance around when nobody is there), it blinks
+every few seconds, a tap gives a hop, happy `^ ^` eyes and an ear flick, stroking the head pets it (it leans in,
+ears relax, eyes close happily) and the tail sways, faster when happy. Reduced motion turns all of this off. The
+widgets use pre-rendered frames of this same model.
 
 ## The fallback cat (`assets/cat.svg`)
 Flat shapes with a soft brown outline (`#7a5f4c`, 2.4 px), cream fur `#fffaf2` with `#f1e4d1` shading,

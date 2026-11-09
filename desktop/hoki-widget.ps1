@@ -168,20 +168,23 @@ function Set-PawWave([double]$wave) {
 }
 Set-PawWave 1
 
-# Today's count, written along the front of the red cushion (the cushion is seen at 3/4, so tilt it).
+# Today's count on a small red seal-like pill beside the feet (the cat sits on the ground, no cushion).
 $counter = New-Object Windows.Controls.TextBlock
-$counter.Width = 110
 $counter.TextAlignment = 'Center'
 $counter.FontFamily = New-Object Windows.Media.FontFamily('Palatino Linotype, Georgia, Microsoft YaHei UI')
 $counter.FontWeight = 'SemiBold'
 $counter.FontSize = 13
 $counter.Foreground = $BrushConverter.ConvertFromString('#fff3df')
-$counter.IsHitTestVisible = $false
-$counter.RenderTransformOrigin = New-Object Windows.Point(0.5, 0.5)
-$counter.RenderTransform = New-Object Windows.Media.RotateTransform(-8.5)
-[Windows.Controls.Canvas]::SetLeft($counter, 64)
-[Windows.Controls.Canvas]::SetTop($counter, 229)
-[void]$scene.Children.Add($counter)
+$counterPill = New-Object Windows.Controls.Border
+$counterPill.Background = $BrushConverter.ConvertFromString('#b7443a')
+$counterPill.CornerRadius = New-Object Windows.CornerRadius(11)
+$counterPill.Padding = New-Object Windows.Thickness(9, 2, 9, 3)
+$counterPill.MinWidth = 52
+$counterPill.IsHitTestVisible = $false
+$counterPill.Child = $counter
+[Windows.Controls.Canvas]::SetLeft($counterPill, 8)
+[Windows.Controls.Canvas]::SetTop($counterPill, 234)
+[void]$scene.Children.Add($counterPill)
 
 # Floating "+1" layer.
 $fx = New-Object Windows.Controls.Canvas
