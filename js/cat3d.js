@@ -579,6 +579,8 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
   let blinkAge = 1;
   const interactive = sway;
   let forcedHappy = false;   // previews and widget frames can show the '^ ^' face
+  // A cursor outside the cat's box (the native desktop widget feeds the desktop mouse in).
+  const remote = { x: 0, y: 0, age: Infinity };
 
   container.addEventListener('pointermove', (event) => {
     if (!interactive) {
@@ -617,9 +619,15 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
     let lookX = 0;
     let lookY = 0;
     if (interactive) {
+      remote.age += dt;
       if (pointer.active) {
         lookX = pointer.x;
         lookY = pointer.y + 0.35;   // the head sits in the upper part of the box
+      } else if (remote.age < 2.5) {
+        pointer.tx = remote.x;
+        pointer.ty = remote.y;
+        lookX = pointer.x;
+        lookY = pointer.y + 0.35;
       } else {
         lookX = Math.sin(time * 0.37) * 0.35;
         lookY = Math.sin(time * 0.23) * 0.15;
@@ -694,6 +702,16 @@ export function createCat3D(container, { transparent = true, sway = true } = {})
         hop = Math.min(1, hop + dt * 4.5);
       }
       render(dt);
+    },
+    // Look toward a point outside the canvas, in the same units as the pointer
+    // (-1..1 spans the cat's box; farther away is clamped). Used for the desktop cursor.
+    lookAt(nx, ny) {
+      if (!interactive || pointer.active) {
+        return;
+      }
+      remote.x = Math.max(-1.4, Math.min(1.4, nx));
+      remote.y = Math.max(-1.4, Math.min(1.4, ny));
+      remote.age = 0;
     },
     // A tap: a little hop, happy '^ ^' eyes and an ear flick.
     hop() {

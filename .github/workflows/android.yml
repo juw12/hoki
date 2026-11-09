@@ -3,7 +3,14 @@ name: Android widget
 on:
   push:
     branches: [main]
-    paths: ["android/**", ".github/workflows/android.yml"]
+    paths:
+      - "android/**"
+      - "index.html"
+      - "manifest.webmanifest"
+      - "css/**"
+      - "js/**"
+      - "assets/**"
+      - ".github/workflows/android.yml"
   workflow_dispatch:
 
 permissions:
@@ -41,5 +48,5 @@ jobs:
           TAG="android-v${VERSION}-${GITHUB_RUN_NUMBER}"
           gh release create "$TAG" hoki-widget.apk \
             --title "Hoki phone widget ${VERSION}" \
-            --notes "Android home-screen widget: the waving lucky cat, tap it for luck. Install hoki-widget.apk, then long-press the home screen > Widgets > Hoki." \
+            --notes "Android: the full 3D Hoki app (works offline) plus the home-screen widget. Install hoki-widget.apk, then long-press the home screen > Widgets > Hoki. Windows: Hoki.exe is attached by the Windows workflow." \
             --latest

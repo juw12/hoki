@@ -1,0 +1,53 @@
+name: Windows app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "index.html"
+      - "manifest.webmanifest"
+      - "css/**"
+      - "js/**"
+      - "assets/**"
+      - ".github/workflows/windows.yml"
+  workflow_run:
+    workflows: ["Android widget"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      - name: Build Hoki.exe
+        shell: pwsh
+        run: ./app/build.ps1
+      - name: Collect
+        shell: pwsh
+        run: |
+          Copy-Item app/target/release/hoki.exe Hoki.exe
+          Get-Item Hoki.exe | Select-Object Name, Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hoki-windows
+          path: Hoki.exe
+      # The Android workflow creates the "latest" release; attach the Windows app to it so
+      # https://github.com/juw12/hoki/releases/latest/download/Hoki.exe always resolves.
+      - name: Attach to latest release
+        if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = gh release view --repo $env:GITHUB_REPOSITORY --json tagName -q .tagName
+          gh release upload $tag Hoki.exe --repo $env:GITHUB_REPOSITORY --clobber
+          "Attached Hoki.exe to $tag"

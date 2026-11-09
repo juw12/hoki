@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hoki">
-  <link rel="stylesheet" href="css/style.css?v=3.1.2">
+  <link rel="stylesheet" href="css/style.css?v=3.2.0">
 </head>
 <body>
   <header class="top">
@@ -95,6 +95,7 @@
     <button id="cat" class="cat" type="button" aria-label="Tap the lucky cat for a luck boost" aria-describedby="hint"></button>
     <div class="fx" id="fx" aria-hidden="true"></div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div class="widget-pill" aria-hidden="true"><span lang="zh">福</span> <b id="widget-count">0</b></div>
   </main>
 
   <p class="hint" id="hint">Tap Hoki for a little luck</p>
@@ -134,12 +135,12 @@
     </div>
     <div id="install-help" class="panel" hidden></div>
     <div id="desktop" class="panel" hidden>
-      <p><b>Windows:</b> paste this into PowerShell. Hoki sits on your desktop, waves all day, and remembers your luck.</p>
+      <p><b>Windows app:</b> paste this into PowerShell. It installs Hoki as a real app, and the same live 3D cat sits on your desktop, watching your mouse.</p>
       <div class="cmd"><code id="install-cmd">irm https://juw12.github.io/hoki/desktop/install.ps1 | iex</code><button id="copy" class="pill small" type="button">Copy</button></div>
-      <p class="fine">Drag to move. Right-click for size, sound, always on top and start with Windows.</p>
+      <p class="fine">Click the cat for luck, drag to move, right-click for size, sound and the full app. Or <a href="https://github.com/juw12/hoki/releases/latest/download/Hoki.exe">download Hoki.exe</a>.</p>
     </div>
     <div id="phone" class="panel" hidden>
-      <p><b>Android:</b> a real home-screen widget. The cat waves on your home screen and a tap adds luck.</p>
+      <p><b>Android app:</b> the full 3D Hoki, offline, plus a home-screen widget where the cat waves and a tap adds luck.</p>
       <p><a id="apk-link" class="pill small dl" href="https://github.com/juw12/hoki/releases/latest/download/hoki-widget.apk">Download hoki-widget.apk</a></p>
       <p class="fine">Open the file to install (allow your browser to install apps once). Then long-press the home screen, choose Widgets, and drag Hoki out.</p>
       <p><b>iPhone:</b> Apple only allows home-screen widgets from App Store apps. Use Share, then "Add to Home Screen" for a full-screen Hoki that works offline.</p>
@@ -149,6 +150,6 @@
   </div>
 
   <noscript>Hoki needs JavaScript to wave.</noscript>
-  <script src="js/app.js?v=3.1.2" defer></script>
+  <script src="js/app.js?v=3.2.0" defer></script>
 </body>
 </html>

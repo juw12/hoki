@@ -1,0 +1,20 @@
+[package]
+name = "hoki"
+version = "3.2.0"
+description = "Hoki, the waving lucky cat for your desktop"
+authors = ["juw12"]
+license = "MIT"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

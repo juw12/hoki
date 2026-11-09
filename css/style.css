@@ -912,6 +912,72 @@ body.widget .stage {
   width: min(96vw, 96vh);
 }
 
+/* Today's count under the desktop cat (widget modes only). */
+.widget-pill {
+  display: none;
+}
+
+body.widget .widget-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 2%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #b6453a;
+  color: #fff8ee;
+  font: 600 0.82rem var(--serif);
+  box-shadow: 0 2px 6px rgba(60, 30, 20, 0.25);
+  pointer-events: none;
+}
+
+body.widget .widget-pill b {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The native app has its own window, so the install-to-home-screen pill is not needed. */
+body.native #install {
+  display: none;
+}
+
+/* Right-click menu of the native desktop cat. */
+.widget-menu {
+  position: fixed;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 136px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.widget-menu[hidden] {
+  display: none;
+}
+
+.widget-menu button {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: 400 0.85rem var(--sans, system-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.widget-menu button:hover,
+.widget-menu button:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lantern,
   .scene .gate-halo {

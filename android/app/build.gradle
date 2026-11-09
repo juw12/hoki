@@ -10,8 +10,8 @@ android {
         applicationId "io.github.juw12.hoki"
         minSdk 26
         targetSdk 34
-        versionCode 12
-        versionName "3.1.2"
+        versionCode 13
+        versionName "3.2.0"
     }
 
     // A fixed, intentionally public key: it is not a secret, it only keeps every build
@@ -41,9 +41,28 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
+    // The full web app (repo root) is bundled into the APK so the app works offline.
+    sourceSets {
+        main {
+            assets.srcDirs += ["$buildDir/generated/hokiweb"]
+        }
+    }
+
     lint {
         abortOnError true
         checkReleaseBuilds true
         disable "IconMissingDensityFolder", "IconLocation", "OldTargetApi", "GradleDependency", "AndroidGradlePluginVersion"
     }
 }
+
+def webRoot = rootProject.file("..")
+
+tasks.register("copyHokiWeb", Copy) {
+    from(webRoot) {
+        include "index.html", "manifest.webmanifest"
+        include "css/**", "js/**", "assets/**"
+    }
+    into "$buildDir/generated/hokiweb/www"
+}
+
+preBuild.dependsOn("copyHokiWeb")

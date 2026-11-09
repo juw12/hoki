@@ -45,8 +45,17 @@
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const params = new URLSearchParams(location.search);
-  if (params.has('widget')) {
+  // The Windows app (app/) tells the page which window it is in: 'app' or 'widget'.
+  // The Android app serves the bundled copy from appassets.androidplatform.net.
+  const androidApp = location.hostname === 'appassets.androidplatform.net';
+  const native = window.HOKI_NATIVE || (androidApp ? 'android' : null);
+  const desktopApp = native === 'app' || native === 'widget';
+  const nativeWidget = native === 'widget';
+  if (params.has('widget') || nativeWidget) {
     document.body.classList.add('widget');
+  }
+  if (native) {
+    document.body.classList.add('native');
   }
 
   // Sky in the moon gate follows the local time of day (like Jeda's scenes).
@@ -262,6 +271,7 @@
     nextEl.textContent = nextMilestone(state.today).toLocaleString();
     $('sound-label').textContent = state.sound ? 'Sound on' : 'Sound off';
     soundButton.setAttribute('aria-pressed', String(state.sound));
+    $('widget-count').textContent = state.today.toLocaleString();
   }
 
   function renderBoost() {
@@ -437,7 +447,7 @@
 
   // Pointer for fast repeated taps; click with detail 0 for keyboard (Enter/Space).
   catButton.addEventListener('pointerdown', (event) => {
-    if (event.button === 0) {
+    if (event.button === 0 && !nativeWidget) {
       tap();
     }
   });
@@ -488,7 +498,14 @@
 
   const desktopToggle = $('desktop-toggle');
   const desktopPanel = $('desktop');
+  if (desktopApp) {
+    desktopToggle.setAttribute('aria-label', 'Put Hoki on your desktop');
+  }
   desktopToggle.addEventListener('click', () => {
+    if (desktopApp) {
+      nativeCall('open_widget');
+      return;
+    }
     desktopPanel.hidden = !desktopPanel.hidden;
     desktopToggle.setAttribute('aria-expanded', String(!desktopPanel.hidden));
   });
@@ -553,8 +570,102 @@
 
   boot();
 
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  if ('serviceWorker' in navigator && location.protocol !== 'file:' && !native) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+
+  // ---------- native app (app/, Tauri): the full app window and the live desktop cat ----------
+  function nativeCall(command, args) {
+    const tauri = window.__TAURI__;
+    if (!tauri || !tauri.core) {
+      return Promise.resolve();
+    }
+    return tauri.core.invoke(command, args).catch(() => {});
+  }
+
+  // Counts stay in step between the app window and the desktop cat (same storage).
+  window.addEventListener('storage', (event) => {
+    if (event.key !== STORE_KEY) {
+      return;
+    }
+    Object.assign(state, loadState());
+    renderStats();
+  });
+
+  if (nativeWidget) {
+    // The app feeds in the desktop cursor (relative to this window), so Hoki watches the mouse anywhere.
+    window.hokiCursor = (x, y) => {
+      if (cat3d && cat3d.lookAt) {
+        cat3d.lookAt(x, y);
+      }
+    };
+
+    // Click = tap (on release, so a drag never counts); press and move = carry Hoki somewhere else.
+    let press = null;
+    catButton.addEventListener('pointerdown', (event) => {
+      if (event.button === 0) {
+        press = { x: event.screenX, y: event.screenY };
+      }
+    });
+    window.addEventListener('pointermove', (event) => {
+      if (press && (event.buttons & 1) && Math.hypot(event.screenX - press.x, event.screenY - press.y) > 5) {
+        press = null;
+        nativeCall('widget_drag');
+      }
+    });
+    window.addEventListener('pointerup', (event) => {
+      if (press && event.button === 0) {
+        tap();
+      }
+      press = null;
+    });
+
+    // Right-click menu.
+    const menu = document.createElement('div');
+    menu.className = 'widget-menu';
+    menu.setAttribute('role', 'menu');
+    menu.hidden = true;
+    const items = [
+      ['Open Hoki', () => nativeCall('open_app')],
+      ['Small', () => nativeCall('widget_size', { size: 0 })],
+      ['Medium', () => nativeCall('widget_size', { size: 1 })],
+      ['Large', () => nativeCall('widget_size', { size: 2 })],
+      ['Sound on / off', () => {
+        state.sound = !state.sound;
+        save();
+        renderStats();
+      }],
+      ['Hide Hoki', () => nativeCall('close_widget')],
+    ];
+    for (const [label, action] of items) {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.setAttribute('role', 'menuitem');
+      item.textContent = label;
+      item.addEventListener('click', () => {
+        menu.hidden = true;
+        action();
+      });
+      menu.append(item);
+    }
+    document.body.append(menu);
+    window.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      menu.hidden = false;
+      const x = Math.min(event.clientX, window.innerWidth - menu.offsetWidth - 4);
+      const y = Math.min(event.clientY, window.innerHeight - menu.offsetHeight - 4);
+      menu.style.left = `${Math.max(4, x)}px`;
+      menu.style.top = `${Math.max(4, y)}px`;
+    });
+    window.addEventListener('pointerdown', (event) => {
+      if (!menu.contains(event.target)) {
+        menu.hidden = true;
+      }
+    }, true);
+    window.addEventListener('blur', () => {
+      menu.hidden = true;
+    });
   }
 
   // Small hook for automated checks.

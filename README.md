@@ -1,7 +1,7 @@
 <!-- HERO:START -->
 <p align="center">
   <a href="https://juw12.github.io/hoki/"><img src="docs/media/phone.png" alt="Hoki: a waving lucky cat. Tap it for a luck boost." width="300"></a>
-  <img src="docs/media/desktop-widget.png" alt="Hoki as a Windows desktop widget" width="220">
+  <img src="docs/media/desktop-widget.png" alt="Hoki on the Windows desktop" width="220">
 </p>
 
 <p align="center">
@@ -12,15 +12,15 @@
 <p align="center">
   <a href="https://juw12.github.io/hoki/"><b>Try it live</b></a> ·
   <a href="#phone-widget-android">Phone widget</a> ·
-  <a href="#desktop-widget-windows">Desktop widget</a> ·
+  <a href="#windows-app">Windows app</a> ·
   <a href="https://github.com/juw12">More by juw12</a>
 </p>
 
 <p align="center">
   <a href="https://juw12.github.io/hoki/"><img src="https://img.shields.io/badge/demo-live-2ea44f" alt="Live demo"></a>
   <img src="https://img.shields.io/badge/Web_%28PWA%29-24292f" alt="Web (PWA)">
-  <img src="https://img.shields.io/badge/Windows_widget-24292f" alt="Windows widget">
-  <img src="https://img.shields.io/badge/Android_widget-24292f" alt="Android widget">
+  <img src="https://img.shields.io/badge/Windows_app-24292f" alt="Windows app">
+  <img src="https://img.shields.io/badge/Android_app_%2B_widget-24292f" alt="Android app and widget">
   <img src="https://img.shields.io/badge/Offline-24292f" alt="Offline">
 </p>
 <!-- HERO:END -->
@@ -55,13 +55,13 @@ A real home-screen widget: the cat waves right on your home screen and a tap add
 1. Download [hoki-widget.apk](https://github.com/juw12/hoki/releases/latest/download/hoki-widget.apk) on the phone and open it (allow your browser to install apps once).
 2. Long-press the home screen, choose **Widgets**, find **Hoki** and drag it out. Resize it as you like.
 
-Opening the Hoki app shows the full web app. The widget counts its own luck (stored on the phone); the web app keeps its count in the browser.
+Opening the Hoki app shows the full 3D app, bundled inside the APK so it works offline (no website needed). The widget counts its own luck (stored on the phone); the app keeps its own count.
 
-How it works: Android widgets cannot run WebGL, so `tools/make_widget_frames.py` renders the same 3D cat as the web app (`js/cat3d.js`) at 9 poses of one front-to-back beckon, and a `ViewFlipper` plays them as a 16-step eased loop (85 ms per step). The APK is built and published by GitHub Actions (`.github/workflows/android.yml`) on every change under `android/`. It is signed with a deliberately public key (`android/app/hoki-public.p12`) so updates install over each other; it is a sideloaded hobby app, not a Play Store listing.
+How it works: Android widgets cannot run WebGL, so `tools/make_widget_frames.py` renders the same 3D cat as the web app (`js/cat3d.js`) at 9 poses of one front-to-back beckon, and a `ViewFlipper` plays them as a 16-step eased loop (85 ms per step). The APK is built and published by GitHub Actions (`.github/workflows/android.yml`) on every change under `android/` or the web app; Gradle copies `index.html`, `css/`, `js/` and `assets/` into the APK. It is signed with a deliberately public key (`android/app/hoki-public.p12`) so updates install over each other; it is a sideloaded hobby app, not a Play Store listing.
 
 **iPhone:** Apple only allows home-screen widgets from App Store apps, so on iPhone use Share > *Add to Home Screen* (full-screen, offline).
 
-## Desktop widget (Windows)
+## Windows app
 
 Paste into PowerShell:
 
@@ -69,15 +69,18 @@ Paste into PowerShell:
 irm https://juw12.github.io/hoki/desktop/install.ps1 | iex
 ```
 
-The cat sits on your desktop on the right edge, always on top, with a transparent background.
+Or download [Hoki.exe](https://github.com/juw12/hoki/releases/latest/download/Hoki.exe) (one file, ~10 MB, no installer, no admin).
 
-- **Click** for luck. **Drag** to move.
-- **Right-click** for sound, always on top, start with Windows, size (S/M/L), move to corner, and quit.
-- No admin rights and no install wizard: it's one PowerShell + WPF script (`desktop/hoki-widget.ps1`) that plays 13 pre-rendered frames of the web app's 3D cat (`desktop/frames/`, ~1 MB), picked by the beckon phase so the luck boost still speeds it up.
-- Files: `%LOCALAPPDATA%\Hoki` (program), `%APPDATA%\Hoki` (your luck + settings), Start menu "Hoki Lucky Cat".
-- Uninstall: right-click → Quit, then delete those two folders and the Start menu shortcut.
+- **Hoki** (Start menu) opens the full app in its own window.
+- **Hoki Lucky Cat** puts the live 3D cat on your desktop: transparent, always on top, bottom right. It is the same 3D cat as the web app, not a flipbook, so it waves smoothly, blinks, hops when tapped, gets petted, and **watches your mouse anywhere on the screen**.
+- **Click** the cat for luck, **drag** to move it, **right-click** for size (S/M/L), sound, *Open Hoki* and *Hide Hoki*. The *Desktop* button in the app window also puts the cat on your desktop.
+- The app window and the desktop cat share one luck count.
+- How it works: `app/` is a small [Tauri 2](https://tauri.app) shell (Rust, WebView2) around the same `index.html` + `js/cat3d.js`. `app/src/main.rs` opens the windows and feeds the desktop cursor position to the cat 30 times a second. GitHub Actions (`.github/workflows/windows.yml`) builds `Hoki.exe` and attaches it to the latest release.
+- Needs the WebView2 runtime, which ships with Windows 10 and 11. If the download fails, the installer falls back to the older lightweight PowerShell widget (`desktop/hoki-widget.ps1`, 13 pre-rendered frames).
+- Files: `%LOCALAPPDATA%\Hoki\Hoki.exe`, `%APPDATA%\io.github.juw12.hoki` (position and size), WebView2 data in `%LOCALAPPDATA%\io.github.juw12.hoki`.
+- Uninstall: right-click the cat → *Hide Hoki*, close the app, delete those folders and the two Start menu shortcuts.
 
-Without installing: run `desktop/Hoki.cmd` from a checkout.
+Build it yourself: `pwsh app/build.ps1` (needs Rust and the MSVC build tools) → `app/target/release/hoki.exe`.
 
 ## Run locally
 
@@ -100,7 +103,7 @@ The look (palette, type, motion, banned defaults) is written down in `design.md`
 | Cat (3D) | `js/cat3d.js`: a procedural glazed-ceramic maneki-neko in three.js (`js/vendor/three.module.min.js`, r170, MIT): faces you with big glossy kawaii eyes, calico body, raised arm with a shoulder and a wrist joint, koban coin and bell, sitting on a soft contact shadow (no cushion). It is interactive: eyes and head follow your pointer, it blinks, taps make it hop with happy `^ ^` eyes and an ear flick, stroking its head pets it, and its tail sways. The paw beckons front-to-back like a real maneki-neko: the wrist and shoulder turn about the sideways axis, toward you. Slow GPUs get a lighter render automatically |
 | Cat (fallback) | `assets/cat.svg`: the flat vector cat, used when WebGL is unavailable (or with `?flat`) |
 | Web / PWA | `index.html`, `css/style.css`, `js/app.js`, `sw.js`, `manifest.webmanifest` |
-| Windows widget | `desktop/hoki-widget.ps1`, `desktop/frames/`, `desktop/install.ps1`, `desktop/Hoki.cmd` |
+| Windows app | `app/` (Tauri 2: `src/main.rs`, `tauri.conf.json`, `build.ps1`), `desktop/install.ps1`; legacy widget `desktop/hoki-widget.ps1` + `desktop/frames/` |
 | Widget frames | `tools/make_widget_frames.py` (Android `drawable-nodpi/cat_*.png` + `desktop/frames/`) |
 | Checks | `tools/check_web.py`, `-Snapshot` mode of the widget |
 
