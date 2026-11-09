@@ -47,6 +47,6 @@ jobs:
         run: |
           TAG="android-v${VERSION}-${GITHUB_RUN_NUMBER}"
           gh release create "$TAG" hoki-widget.apk \
-            --title "Hoki phone widget ${VERSION}" \
+            --title "Hoki ${VERSION}: Windows app + Android app" \
             --notes "Android: the full 3D Hoki app (works offline) plus the home-screen widget. Install hoki-widget.apk, then long-press the home screen > Widgets > Hoki. Windows: Hoki.exe is attached by the Windows workflow." \
             --latest
