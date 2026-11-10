@@ -1,3 +1,9 @@
 tools/out/
 __pycache__/
 *.log
+
+# Android signing: the release key and its password never go in git
+*.p12
+*.jks
+*.keystore
+keystore.properties

@@ -2,6 +2,14 @@ plugins {
     id "com.android.application"
 }
 
+def hokiKeystoreProps = new Properties()
+def hokiKeystorePropsFile = rootProject.file("keystore.properties")
+if (hokiKeystorePropsFile.exists()) {
+    hokiKeystorePropsFile.withInputStream { hokiKeystoreProps.load(it) }
+}
+def hokiSigning = { String name -> System.getenv(name) ?: hokiKeystoreProps.getProperty(name) }
+def hokiKeystoreFile = hokiSigning("HOKI_KEYSTORE_FILE")
+
 android {
     namespace "io.github.juw12.hoki"
     compileSdk 34
@@ -14,25 +22,32 @@ android {
         versionName "3.2.0"
     }
 
-    // A fixed, intentionally public key: it is not a secret, it only keeps every build
-    // installable over the previous one (sideloaded hobby app, not a Play Store listing).
+    // Private release key, never committed. Values come from env vars (CI secrets) or the
+    // git-ignored android/keystore.properties written by tools/android_setup.py.
+    // Without them, debug builds use the default debug key and release stays unsigned.
     signingConfigs {
-        hoki {
-            storeFile file("hoki-public.p12")
-            storeType "pkcs12"
-            storePassword "hoki-public"
-            keyAlias "hoki"
-            keyPassword "hoki-public"
+        if (hokiKeystoreFile) {
+            hoki {
+                storeFile file(hokiKeystoreFile)
+                storeType "pkcs12"
+                storePassword hokiSigning("HOKI_KEYSTORE_PASSWORD")
+                keyAlias hokiSigning("HOKI_KEY_ALIAS") ?: "hoki"
+                keyPassword hokiSigning("HOKI_KEY_PASSWORD") ?: hokiSigning("HOKI_KEYSTORE_PASSWORD")
+            }
         }
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.hoki
+            if (hokiKeystoreFile) {
+                signingConfig signingConfigs.hoki
+            }
         }
         debug {
-            signingConfig signingConfigs.hoki
+            if (hokiKeystoreFile) {
+                signingConfig signingConfigs.hoki
+            }
         }
     }
 
