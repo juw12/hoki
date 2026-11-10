@@ -11,6 +11,15 @@ on:
       - "js/**"
       - "assets/**"
       - ".github/workflows/android.yml"
+  pull_request:
+    paths:
+      - "android/**"
+      - "index.html"
+      - "manifest.webmanifest"
+      - "css/**"
+      - "js/**"
+      - "assets/**"
+      - ".github/workflows/android.yml"
   workflow_dispatch:
 
 permissions:
@@ -28,8 +37,20 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.7"
+      - name: Decode signing key
+        env:
+          HOKI_KEYSTORE_B64: ${{ secrets.HOKI_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$HOKI_KEYSTORE_B64" ]; then
+            echo "::error::Repo secret HOKI_KEYSTORE_B64 is missing (see README, Android signing)"
+            exit 1
+          fi
+          echo "$HOKI_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/hoki-release.p12"
+          echo "HOKI_KEYSTORE_FILE=$RUNNER_TEMP/hoki-release.p12" >> "$GITHUB_ENV"
       - name: Lint and build
         working-directory: android
+        env:
+          HOKI_KEYSTORE_PASSWORD: ${{ secrets.HOKI_KEYSTORE_PASSWORD }}
         run: gradle --no-daemon lintRelease assembleRelease
       - name: Collect APK
         run: |
@@ -42,6 +63,7 @@ jobs:
           name: hoki-widget
           path: hoki-widget.apk
       - name: Publish release
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -50,3 +72,6 @@ jobs:
             --title "Hoki ${VERSION}: Windows app + Android app" \
             --notes "Android: the full 3D Hoki app (works offline) plus the home-screen widget. Install hoki-widget.apk, then long-press the home screen > Widgets > Hoki. Windows: Hoki.exe is attached by the Windows workflow." \
             --latest
+      - name: Remove signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/hoki-release.p12"
