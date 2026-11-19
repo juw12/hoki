@@ -40,14 +40,23 @@ jobs:
         with:
           name: Hoki-windows
           path: Hoki.exe
-      # The Android workflow creates the "latest" release; attach the Windows app to it so
-      # https://github.com/juw12/hoki/releases/latest/download/Hoki.exe always resolves.
-      - name: Attach to latest release
+      # The Android workflow creates each release without marking it latest. Attach the Windows app to the
+      # newest release and only then mark it latest, so both
+      # https://github.com/juw12/hoki/releases/latest/download/Hoki.exe and .../hoki-widget.apk always resolve.
+      - name: Attach to the newest release, then mark it latest
         if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $tag = gh release view --repo $env:GITHUB_REPOSITORY --json tagName -q .tagName
+          $tag = gh release list --repo $env:GITHUB_REPOSITORY --limit 1 --exclude-drafts --exclude-pre-releases --json tagName -q '.[0].tagName'
+          if ($LASTEXITCODE -ne 0 -or -not $tag) { throw "no release to attach Hoki.exe to" }
           gh release upload $tag Hoki.exe --repo $env:GITHUB_REPOSITORY --clobber
-          "Attached Hoki.exe to $tag"
+          if ($LASTEXITCODE -ne 0) { throw "could not attach Hoki.exe to $tag" }
+          $assets = gh release view $tag --repo $env:GITHUB_REPOSITORY --json assets -q '.assets[].name'
+          if ($assets -notcontains 'Hoki.exe' -or $assets -notcontains 'hoki-widget.apk') {
+            throw "$tag does not have both downloads yet ($assets); it stays out of 'latest'"
+          }
+          gh release edit $tag --repo $env:GITHUB_REPOSITORY --latest
+          if ($LASTEXITCODE -ne 0) { throw "could not mark $tag latest" }
+          "Attached Hoki.exe to $tag and marked it latest"
