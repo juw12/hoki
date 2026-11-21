@@ -11,6 +11,11 @@ on:
       - "js/**"
       - "assets/**"
       - ".github/workflows/mac.yml"
+  # A pull request that touches the app builds and starts the Mac app; nothing is attached from it.
+  pull_request:
+    paths:
+      - "app/**"
+      - ".github/workflows/mac.yml"
   workflow_run:
     workflows: ["Android widget"]
     types: [completed]
