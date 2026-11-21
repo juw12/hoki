@@ -13,6 +13,7 @@
   <a href="https://juw12.github.io/hoki/"><b>Try it live</b></a> ·
   <a href="#phone-widget-android">Phone widget</a> ·
   <a href="#windows-app">Windows app</a> ·
+  <a href="#mac-app">Mac app</a> ·
   <a href="https://github.com/juw12">More by juw12</a>
 </p>
 
@@ -20,6 +21,7 @@
   <a href="https://juw12.github.io/hoki/"><img src="https://img.shields.io/badge/demo-live-2ea44f" alt="Live demo"></a>
   <img src="https://img.shields.io/badge/Web_%28PWA%29-24292f" alt="Web (PWA)">
   <img src="https://img.shields.io/badge/Windows_app-24292f" alt="Windows app">
+  <img src="https://img.shields.io/badge/Mac_app-24292f" alt="Mac app">
   <img src="https://img.shields.io/badge/Android_app_%2B_widget-24292f" alt="Android app and widget">
   <img src="https://img.shields.io/badge/Offline-24292f" alt="Offline">
 </p>
@@ -60,6 +62,12 @@ Opening the Hoki app shows the full 3D app, bundled inside the APK so it works o
 How it works: Android widgets cannot run WebGL, so `tools/make_widget_frames.py` renders the same 3D cat as the web app (`js/cat3d.js`) at 9 poses of one front-to-back beckon, and a `ViewFlipper` plays them as a 16-step eased loop (85 ms per step). The APK is built and published by GitHub Actions (`.github/workflows/android.yml`) on every change under `android/` or the web app; Gradle copies `index.html`, `css/`, `js/` and `assets/` into the APK. It is signed with a deliberately public key (`android/app/hoki-public.p12`) so updates install over each other; it is a sideloaded hobby app, not a Play Store listing.
 
 **iPhone:** Apple only allows home-screen widgets from App Store apps, so on iPhone use Share > *Add to Home Screen* (full-screen, offline).
+
+## Mac app
+
+Download [Hoki-mac.dmg](https://github.com/juw12/hoki/releases/latest/download/Hoki-mac.dmg) (one file for Apple Silicon and Intel), open it and drag Hoki to Applications. The app is not notarised by Apple: the first time, right-click it and choose **Open**.
+
+It is the same app as on Windows, built from the same `app/` by `.github/workflows/mac.yml`: the full app in its own window, and the *Desktop* button puts the cat on your desktop. The Mac build is new and has had far less use than the Windows one.
 
 ## Windows app
 

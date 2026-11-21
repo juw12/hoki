@@ -1,0 +1,96 @@
+name: Mac app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "index.html"
+      - "manifest.webmanifest"
+      - "css/**"
+      - "js/**"
+      - "assets/**"
+      - ".github/workflows/mac.yml"
+  # A pull request that touches the app builds and starts the Mac app; nothing is attached from it.
+  pull_request:
+    paths:
+      - "app/**"
+      - ".github/workflows/mac.yml"
+  workflow_run:
+    workflows: ["Android widget"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build Hoki.app + disk image (one file for Apple Silicon and Intel)
+        run: |
+          rm -rf app/dist
+          mkdir app/dist
+          cp -R index.html manifest.webmanifest css js assets app/dist/
+          cd app
+          npx --yes @tauri-apps/cli@^2 build --target universal-apple-darwin --bundles app,dmg
+      - name: Smoke-test the app (both chips inside, signature holds, starts and stays up)
+        run: |
+          app=$(ls -d app/target/universal-apple-darwin/release/bundle/macos/*.app | head -n 1)
+          program="$app/Contents/MacOS/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")"
+          archs=$(lipo -archs "$program")
+          echo "chips: $archs"
+          case "$archs" in *arm64*) ;; *) echo "no Apple Silicon build inside"; exit 1 ;; esac
+          case "$archs" in *x86_64*) ;; *) echo "no Intel build inside"; exit 1 ;; esac
+          codesign --verify --deep --strict "$app"
+          "$program" > hoki-mac.log 2>&1 &
+          pid=$!
+          sleep 15
+          if ! kill -0 "$pid" 2>/dev/null; then
+            echo "Hoki left within 15 s:"
+            cat hoki-mac.log
+            exit 1
+          fi
+          kill "$pid"
+          echo "started and stayed up 15 s"
+      - name: Collect
+        run: |
+          cp app/target/universal-apple-darwin/release/bundle/dmg/*.dmg Hoki-mac.dmg
+          ls -la Hoki-mac.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hoki-mac
+          path: Hoki-mac.dmg
+      # Same rule as the Windows workflow: the newest release gets the file, and it is marked latest only
+      # when every download the README links is on it.
+      - name: Attach to the newest release, then mark it latest when it is complete
+        if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --exclude-drafts --exclude-pre-releases --json tagName -q '.[0].tagName')
+          if [ -z "$tag" ]; then
+            echo "no release to attach Hoki-mac.dmg to"
+            exit 1
+          fi
+          gh release upload "$tag" Hoki-mac.dmg --repo "$GITHUB_REPOSITORY" --clobber
+          assets=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')
+          for file in Hoki.exe Hoki-mac.dmg hoki-widget.apk; do
+            if ! printf '%s\n' "$assets" | grep -qx "$file"; then
+              echo "$tag has no $file yet; it stays out of 'latest' until the other workflow attaches it"
+              exit 0
+            fi
+          done
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --latest
+          echo "Attached Hoki-mac.dmg to $tag and marked it latest"

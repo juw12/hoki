@@ -12,6 +12,10 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 
+# A see-through window on a Mac needs this switch (the cat floats on the desktop without a box around it).
+[target.'cfg(target_os = "macos")'.dependencies]
+tauri = { version = "2", features = ["macos-private-api"] }
+
 [profile.release]
 codegen-units = 1
 lto = true
