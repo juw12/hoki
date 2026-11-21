@@ -57,6 +57,11 @@ jobs:
           if ($assets -notcontains 'Hoki.exe' -or $assets -notcontains 'hoki-widget.apk') {
             throw "$tag does not have both downloads yet ($assets); it stays out of 'latest'"
           }
+          if ($assets -notcontains 'Hoki-mac.dmg') {
+            # The Mac workflow runs beside this one and marks the release latest when it attaches its file.
+            "$tag has no Hoki-mac.dmg yet; the Mac workflow marks it latest"
+            exit 0
+          }
           gh release edit $tag --repo $env:GITHUB_REPOSITORY --latest
           if ($LASTEXITCODE -ne 0) { throw "could not mark $tag latest" }
           "Attached Hoki.exe to $tag and marked it latest"
